@@ -1,5 +1,5 @@
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Environment, ContactShadows } from '@react-three/drei';
+import { OrbitControls, Environment, ContactShadows, Sky } from '@react-three/drei';
 import { Suspense } from 'react';
 import HouseModel from './HouseModel';
 
@@ -10,6 +10,7 @@ interface SceneContainerProps {
     roofType?: 'flat' | 'gable' | 'hip';
     wallColor?: string;
     roofColor?: string;
+    viewMode?: 'rendered' | 'wireframe';
 }
 
 function LoadingFallback() {
@@ -27,27 +28,32 @@ export function SceneContainer({
     floors = 2,
     roofType = 'gable',
     wallColor = '#f5f0e6',
-    roofColor = '#8b4513'
+    roofColor = '#8b4513',
+    viewMode = 'rendered'
 }: SceneContainerProps) {
     return (
         <div className="w-full h-full min-h-[400px] bg-gradient-to-b from-sky-200 to-sky-400 rounded-lg overflow-hidden">
             <Canvas
                 shadows
-                camera={{ position: [20, 15, 20], fov: 50 }}
-                gl={{ antialias: true }}
+                camera={{ position: [20, 15, 20], fov: 45 }}
+                gl={{ antialias: true, toneMappingExposure: 1.1 }}
             >
                 <Suspense fallback={<LoadingFallback />}>
+                    {/* Realistic Sky */}
+                    <Sky sunPosition={[100, 20, 100]} turbidity={0.5} rayleigh={0.5} mieCoefficient={0.005} mieDirectionalG={0.8} />
+
                     {/* Lighting */}
-                    <ambientLight intensity={0.5} />
+                    <ambientLight intensity={0.7} />
                     <directionalLight
                         position={[10, 20, 10]}
-                        intensity={1.5}
+                        intensity={1.2}
                         castShadow
                         shadow-mapSize={[2048, 2048]}
+                        shadow-bias={-0.0001}
                     />
 
                     {/* Environment for realistic reflections */}
-                    <Environment preset="city" />
+                    <Environment preset="city" blur={0.8} />
 
                     {/* House Model */}
                     <HouseModel
@@ -57,6 +63,7 @@ export function SceneContainer({
                         roofType={roofType}
                         wallColor={wallColor}
                         roofColor={roofColor}
+                        viewMode={viewMode}
                     />
 
                     {/* Shadows */}

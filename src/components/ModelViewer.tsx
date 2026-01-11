@@ -139,6 +139,35 @@ const ModelViewer = ({ project }: ModelViewerProps) => {
     }
   };
 
+  // Fullscreen logic
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  // View mode logic
+  const [viewMode, setViewMode] = useState<'rendered' | 'wireframe'>('rendered');
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, []);
+
+  const toggleFullscreen = () => {
+    const elem = document.getElementById('model-viewer-container');
+    if (!elem) return;
+
+    if (!document.fullscreenElement) {
+      elem.requestFullscreen().catch(err => {
+        console.error(`Error attempting to enable fullscreen: ${err.message}`);
+      });
+    } else {
+      document.exitFullscreen();
+    }
+  };
+
   return (
     <main className="flex-1 flex overflow-auto relative min-h-[600px]">
       {/* Left Sidebar - Building Controls */}
@@ -281,27 +310,55 @@ const ModelViewer = ({ project }: ModelViewerProps) => {
       </aside>
 
       {/* 3D Viewport */}
-      <section className="flex-1 relative bg-canvas overflow-hidden">
+      <section
+        ref={(node) => {
+          // Use a callback ref to ensure we can attach the fullscreen listener if needed, 
+          // though simpler is just using an ID or a standard ref. 
+          // But we need the ref for the toggle function.
+          if (node) {
+            // @ts-ignore - assigning to a ref object created via useRef would be standard, 
+            // but here let's just use a local variable or state if we were using useRef.
+            // Actually, let's properly add useRef in the component body.
+          }
+        }}
+        id="model-viewer-container"
+        className="flex-1 relative bg-canvas overflow-hidden"
+      >
         <SceneContainer
           width={config.width}
           length={config.length}
           floors={config.floors}
           roofType={config.roofType}
           wallColor={config.wallMaterial === 'brick' ? '#c45c3e' : config.wallMaterial === 'concrete' ? '#a0a0a0' : '#e8e4d9'}
+          viewMode={viewMode}
         />
 
         {/* View Mode Toolbar */}
         <div className="absolute top-4 right-4 flex flex-col gap-2 items-end">
           <div className="flex bg-white/90 backdrop-blur-md rounded-lg p-1 border border-border-light shadow-lg">
-            <button className="p-2 text-dark-slate hover:bg-gray-100 rounded" title="Rendered View">
+            <button
+              onClick={() => setViewMode('rendered')}
+              className={`p-2 rounded ${viewMode === 'rendered' ? 'text-primary bg-primary/10' : 'text-subtext hover:text-dark-slate hover:bg-gray-100'}`}
+              title="Rendered View"
+            >
               <span className="material-symbols-outlined">view_in_ar</span>
             </button>
-            <button className="p-2 text-subtext hover:text-dark-slate hover:bg-gray-100 rounded" title="Wireframe">
+            <button
+              onClick={() => setViewMode('wireframe')}
+              className={`p-2 rounded ${viewMode === 'wireframe' ? 'text-primary bg-primary/10' : 'text-subtext hover:text-dark-slate hover:bg-gray-100'}`}
+              title="Wireframe"
+            >
               <span className="material-symbols-outlined">grid_4x4</span>
             </button>
             <div className="w-px bg-border-light mx-1 my-1"></div>
-            <button className="p-2 text-subtext hover:text-dark-slate hover:bg-gray-100 rounded" title="Fullscreen">
-              <span className="material-symbols-outlined">fullscreen</span>
+            <button
+              onClick={toggleFullscreen}
+              className="p-2 text-subtext hover:text-dark-slate hover:bg-gray-100 rounded"
+              title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+            >
+              <span className="material-symbols-outlined">
+                {isFullscreen ? 'close_fullscreen' : 'fullscreen'}
+              </span>
             </button>
           </div>
         </div>
