@@ -95,20 +95,20 @@ const Sidebar = ({ projectId }: SidebarProps) => {
               {!isCollapsed && <span className="text-sm font-medium">Overview</span>}
             </Link>
             <Link
-              to={`/project/${projectId}/cost-analysis`}
-              className={navLinkClass(`/project/${projectId}/cost-analysis`)}
-              title="Cost Analysis"
-            >
-              <span className="material-symbols-outlined">bar_chart</span>
-              {!isCollapsed && <span className="text-sm font-medium">Cost Analysis</span>}
-            </Link>
-            <Link
               to={`/project/${projectId}/viewer`}
               className={navLinkClass(`/project/${projectId}/viewer`)}
               title="3D Viewer"
             >
               <span className="material-symbols-outlined">view_in_ar</span>
               {!isCollapsed && <span className="text-sm font-medium">3D Viewer</span>}
+            </Link>
+            <Link
+              to={`/project/${projectId}/cost-analysis`}
+              className={navLinkClass(`/project/${projectId}/cost-analysis`)}
+              title="Cost Analysis"
+            >
+              <span className="material-symbols-outlined">bar_chart</span>
+              {!isCollapsed && <span className="text-sm font-medium">Cost Analysis</span>}
             </Link>
             <Link
               to={`/project/${projectId}/weather`}

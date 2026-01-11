@@ -4,6 +4,7 @@ import Sidebar from '../components/Sidebar';
 import WeatherImpact from '../components/WeatherImpact';
 import { db, type Project } from '../db';
 import { useAuth } from '../context/AuthContext';
+import { getWeatherData, type WeatherData } from '../services/weatherService';
 
 const WeatherImpactPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -11,6 +12,11 @@ const WeatherImpactPage = () => {
   const { user, loading: authLoading } = useAuth();
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Weather state lifted from component
+  const [weather, setWeather] = useState<WeatherData | null>(null);
+  const [weatherLoading, setWeatherLoading] = useState(true);
+  const [weatherError, setWeatherError] = useState('');
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -33,6 +39,36 @@ const WeatherImpactPage = () => {
     loadProject();
   }, [id, navigate]);
 
+  // Fetch weather when project is loaded
+  useEffect(() => {
+    if (project) {
+      fetchWeather();
+    }
+  }, [project]);
+
+  const fetchWeather = async () => {
+    if (!project) return;
+
+    setWeatherLoading(true);
+    const lat = parseFloat(project.latitude);
+    const lng = parseFloat(project.longitude);
+
+    if (isNaN(lat) || isNaN(lng)) {
+      setWeatherError('Invalid coordinates');
+      setWeatherLoading(false);
+      return;
+    }
+
+    const data = await getWeatherData(lat, lng);
+    if (data) {
+      setWeather(data);
+      setWeatherError('');
+    } else {
+      setWeatherError('Failed to fetch weather data');
+    }
+    setWeatherLoading(false);
+  };
+
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-canvas flex items-center justify-center">
@@ -50,7 +86,7 @@ const WeatherImpactPage = () => {
       <Sidebar projectId={project.id} />
       <main className="flex-1 flex flex-col h-full overflow-hidden relative bg-canvas">
         <header className="flex-shrink-0 w-full bg-canvas/90 backdrop-blur-md sticky top-0 z-20 border-b border-border-sub">
-          <div className="px-6 py-6 lg:px-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div className="px-6 py-3 lg:px-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div className="flex flex-col gap-1">
               <h2 className="text-2xl lg:text-3xl font-black text-text-main tracking-tight">Weather Impact</h2>
               <p className="text-text-sub text-sm flex items-center gap-2">
@@ -59,15 +95,24 @@ const WeatherImpactPage = () => {
               </p>
             </div>
             <div className="flex items-center gap-3">
-              <button className="flex items-center justify-center gap-2 px-4 h-10 rounded-lg bg-white hover:bg-gray-50 border border-border-sub text-text-main text-sm font-bold transition-all shadow-sm">
-                <span className="material-symbols-outlined text-[20px]">refresh</span>
-                <span>Refresh Data</span>
+              <button
+                onClick={fetchWeather}
+                disabled={weatherLoading}
+                className="flex items-center justify-center gap-2 px-4 h-10 rounded-lg bg-white hover:bg-gray-50 border border-border-sub text-text-main text-sm font-bold transition-all shadow-sm disabled:opacity-50"
+              >
+                <span className={`material-symbols-outlined text-[20px] ${weatherLoading ? 'animate-spin' : ''}`}>refresh</span>
+                <span>{weatherLoading ? 'Updating...' : 'Refresh Data'}</span>
               </button>
             </div>
           </div>
         </header>
         <div className="flex-1 overflow-y-auto">
-          <WeatherImpact />
+          <WeatherImpact
+            project={project}
+            weather={weather}
+            loading={weatherLoading}
+            error={weatherError}
+          />
         </div>
       </main>
     </div>

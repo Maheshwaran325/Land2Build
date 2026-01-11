@@ -5,7 +5,7 @@ const Header = () => {
     <div className="sticky top-0 z-50 border-b border-[#e5e7eb] bg-background-light/95 backdrop-blur-md">
       <div className="px-4 md:px-10 lg:px-40 flex justify-center">
         <div className="flex w-full max-w-[1280px] flex-col">
-          <header className="flex items-center justify-between whitespace-nowrap py-4">
+          <header className="flex items-center justify-between whitespace-nowrap py-3">
             <div className="flex items-center gap-4 text-text-main">
               <div className="size-8 text-primary">
                 <span className="material-symbols-outlined !text-[32px] text-gradient">landscape</span>

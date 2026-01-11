@@ -1,4 +1,5 @@
 import type { Project } from '../db';
+import SceneContainer from './3d/SceneContainer';
 
 interface ProjectOverviewProps {
   project: Project;
@@ -75,30 +76,24 @@ const ProjectOverview = ({ project }: ProjectOverviewProps) => {
             <div className="p-4 border-b border-border-sub flex justify-between items-center bg-white">
               <h3 className="text-text-main font-bold text-lg flex items-center gap-2">
                 <span className="material-symbols-outlined text-primary-solid">view_in_ar</span>
-                Interactive 3D Preview
+                Interactive 3D Model
               </h3>
-              <div className="flex gap-2">
-                <button className="w-8 h-8 rounded bg-secondary hover:bg-gray-200 flex items-center justify-center text-text-sub hover:text-text-main transition-colors border border-border-sub">
-                  <span className="material-symbols-outlined text-sm">open_with</span>
-                </button>
-                <button className="w-8 h-8 rounded bg-secondary hover:bg-gray-200 flex items-center justify-center text-text-sub hover:text-text-main transition-colors border border-border-sub">
-                  <span className="material-symbols-outlined text-sm">zoom_in</span>
-                </button>
-                <button className="w-8 h-8 rounded bg-secondary hover:bg-gray-200 flex items-center justify-center text-text-sub hover:text-text-main transition-colors border border-border-sub">
-                  <span className="material-symbols-outlined text-sm">360</span>
-                </button>
-              </div>
+              <a href={`/project/${project.id}/viewer`} className="text-primary-solid text-sm font-bold hover:underline flex items-center gap-1">
+                <span>Full Viewer</span>
+                <span className="material-symbols-outlined text-base">arrow_outward</span>
+              </a>
             </div>
-            <div className="relative flex-1 bg-gray-100 group">
-              <div className="absolute inset-0 opacity-10 bg-[url('https://images.unsplash.com/photo-1629814596130-1b777496035c?q=80&w=2757&auto=format&fit=crop')] bg-cover bg-center mix-blend-multiply"></div>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-4/5 h-4/5 bg-contain bg-center bg-no-repeat drop-shadow-xl transition-transform duration-500 group-hover:scale-105" style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuAixRP8z-oZrHMVHOLAFpDoFXNwkYlDVGCHukWCNj8-sZPeo3eKAlee21gUmQJfUJ4ALKUdl7WYa7VD1o_GkMf1h-mh0710LVjcHGqB7PVmyrf50t8IlA9M40rALOxsKfyHCcy4Fihsla5PAsX9haLf7uhR69QQo492ghOXGX3GhOm1EAW2HtzGj7ovCVQpVRyGFKqI2Pc-I9EePncaLIp4WqF8hENgDv4a5Pns0wdHkkLrChwejkVHn0kdLMvsVmISmJXOM-qi-nQm')" }}>
-                </div>
-              </div>
+            <div className="relative flex-1 bg-gradient-to-br from-gray-900 to-gray-800">
+              <SceneContainer
+                width={Math.round(Math.sqrt(project.totalArea / 10.764) * 0.8)}
+                length={Math.round(Math.sqrt(project.totalArea / 10.764) * 1.2)}
+                floors={project.floors}
+                roofType="gable"
+              />
               <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end pointer-events-none">
-                <div className="bg-white/80 backdrop-blur-sm p-3 rounded-lg border border-white/40 shadow-sm pointer-events-auto">
-                  <p className="text-xs text-text-sub uppercase tracking-wider mb-1">Current View</p>
-                  <p className="text-text-main font-bold text-sm">South-West Elevation</p>
+                <div className="bg-white/90 backdrop-blur-sm p-3 rounded-lg border border-white/40 shadow-sm">
+                  <p className="text-xs text-text-sub uppercase tracking-wider mb-1">Building</p>
+                  <p className="text-text-main font-bold text-sm">{project.floors} Floors • {project.totalArea.toLocaleString('en-IN')} sq.ft</p>
                 </div>
               </div>
             </div>

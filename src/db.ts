@@ -9,6 +9,16 @@ export interface User {
     createdAt: Date;
 }
 
+export interface MaterialItem {
+    name: string;
+    category: 'structural' | 'finishing' | 'electrical' | 'plumbing';
+    quantity: number;
+    unit: string;
+    unitPrice: number;
+    totalPrice: number;
+    riskLevel: 'low' | 'medium' | 'high';
+}
+
 export interface Project {
     id?: number;
     userId: number;
@@ -21,7 +31,13 @@ export interface Project {
     zoningType: string;
     topography: 'flat' | 'sloped' | 'mixed';
     status: 'draft' | 'analyzing' | 'complete';
-    // Computed/AI-generated fields (mock data for prototype)
+    // India-specific land inputs
+    city: string;
+    constructionType: 'residential' | 'commercial';
+    builtUpPercent: number;
+    foundationType: 'rcc' | 'strip' | 'pile';
+    // AI-generated data
+    materials: MaterialItem[];
     totalArea: number;
     floors: number;
     hasBasement: boolean;

@@ -1,24 +1,62 @@
-import { useState } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useProjects } from '../hooks/useProjects';
+import type L from 'leaflet';
+
+const reverseGeocode = async (lat: number, lng: number): Promise<string> => {
+  try {
+    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`);
+    const data = await response.json();
+    return data.display_name || `${lat}, ${lng}`;
+  } catch (error) {
+    console.error('Reverse geocoding failed:', error);
+    return `${lat}, ${lng}`;
+  }
+};
+
+const fetchSuggestions = async (query: string): Promise<any[]> => {
+  if (!query.trim()) return [];
+  try {
+    const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&addressdetails=1`);
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Fetching suggestions failed:', error);
+    return [];
+  }
+};
 
 const NewProjectForm = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { createProject } = useProjects();
 
-  // Form state
+  // Form state - Land Parameters
   const [title, setTitle] = useState('');
   const [address, setAddress] = useState('');
   const [latitude, setLatitude] = useState('');
   const [longitude, setLongitude] = useState('');
   const [plotSize, setPlotSize] = useState('');
-  const [plotUnit, setPlotUnit] = useState<'acres' | 'sqft'>('acres');
+  const [plotUnit, setPlotUnit] = useState<'acres' | 'sqft'>('sqft');
   const [zoningType, setZoningType] = useState('');
-  const [topography, setTopography] = useState<'flat' | 'sloped' | 'mixed'>('sloped');
+  const [topography, setTopography] = useState<'flat' | 'sloped' | 'mixed'>('flat');
+
+  // Form state - Building Specifications
+  const [floors, setFloors] = useState('2');
+  const [constructionType, setConstructionType] = useState<'residential' | 'commercial'>('residential');
+  const [builtUpPercent, setBuiltUpPercent] = useState('60');
+  const [foundationType, setFoundationType] = useState<'rcc' | 'strip' | 'pile'>('rcc');
+
+  // UI state
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [locationLoading, setLocationLoading] = useState(false);
+  const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(null);
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const mapRef = useRef<HTMLDivElement>(null);
+
 
   // Redirect if not logged in
   if (!user) {
@@ -56,7 +94,13 @@ const NewProjectForm = () => {
         plotSize: parseFloat(plotSize),
         plotUnit,
         zoningType,
-        topography
+        topography,
+        // Building specifications - extract city from address
+        city: address.split(',').slice(-3, -2)[0]?.trim() || 'Not specified',
+        floors: parseInt(floors) || 2,
+        constructionType,
+        builtUpPercent: parseInt(builtUpPercent) || 60,
+        foundationType
       });
 
       if (projectId) {
@@ -71,9 +115,161 @@ const NewProjectForm = () => {
     }
   };
 
+  const handleGetCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      setError('Geolocation is not supported by this browser.');
+      return;
+    }
+    setLocationLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        setLatitude(latitude.toString());
+        setLongitude(longitude.toString());
+        try {
+          const address = await reverseGeocode(latitude, longitude);
+          setAddress(address);
+        } catch {
+          // Keep address empty if geocoding fails
+        }
+        setLocationLoading(false);
+      },
+      (_error) => {
+        setError('Unable to retrieve your location. Please enter manually.');
+        setLocationLoading(false);
+      }
+    );
+  };
+
+  const handleAddressChange = useCallback((value: string) => {
+    setAddress(value);
+    if (debounceTimer) clearTimeout(debounceTimer);
+    const timer = setTimeout(async () => {
+      if (value.trim()) {
+        const suggs = await fetchSuggestions(value);
+        setSuggestions(suggs);
+        setShowSuggestions(true);
+      } else {
+        setSuggestions([]);
+        setShowSuggestions(false);
+      }
+    }, 300);
+    setDebounceTimer(timer);
+  }, [debounceTimer]);
+
+  const mapInstanceRef = useRef<L.Map | null>(null);
+
+  useEffect(() => {
+    // Only initialize map if we have valid coordinates
+    if (!mapRef.current || !latitude || !longitude) return;
+
+    const lat = parseFloat(latitude);
+    const lng = parseFloat(longitude);
+
+    if (isNaN(lat) || isNaN(lng) || (lat === 0 && lng === 0)) return;
+
+    // Dynamically import Leaflet
+    import('leaflet').then((L) => {
+      // Fix default marker icon issue in Vite/Webpack
+      delete (L.Icon.Default.prototype as any)._getIconUrl;
+      L.Icon.Default.mergeOptions({
+        iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
+        iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+      });
+
+      // Destroy existing map if any
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+
+      // Create new map
+      const map = L.map(mapRef.current!).setView([lat, lng], 15);
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(map);
+
+      // Create marker (we'll update it on click)
+      const marker = L.marker([lat, lng]).addTo(map);
+
+      // Add click handler to select location on map
+      map.on('click', async (e: L.LeafletMouseEvent) => {
+        const clickedLat = e.latlng.lat;
+        const clickedLng = e.latlng.lng;
+
+        // Update marker position
+        marker.setLatLng([clickedLat, clickedLng]);
+
+        // Update form state
+        setLatitude(clickedLat.toFixed(6));
+        setLongitude(clickedLng.toFixed(6));
+
+        // Reverse geocode to get address
+        try {
+          const addr = await reverseGeocode(clickedLat, clickedLng);
+          setAddress(addr);
+        } catch {
+          // Keep existing address if geocoding fails
+        }
+      });
+
+      mapInstanceRef.current = map;
+
+      // Force a resize after a short delay to ensure proper rendering
+      setTimeout(() => {
+        map.invalidateSize();
+      }, 100);
+    });
+
+    // Cleanup on unmount
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, [latitude, longitude]);
+
+
+  // Loading overlay during project creation
+  if (loading) {
+    return (
+      <div className="fixed inset-0 bg-white/95 backdrop-blur-sm z-50 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto px-6">
+          <div className="relative mb-8">
+            <div className="animate-spin rounded-full h-20 w-20 border-4 border-primary/20 border-t-primary mx-auto"></div>
+            <span className="material-symbols-outlined text-4xl text-primary absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-pulse">auto_awesome</span>
+          </div>
+          <h2 className="text-2xl font-black text-text-main mb-3">Creating Your Project</h2>
+          <p className="text-text-sub mb-6">Our AI is analyzing your land data and generating estimates...</p>
+          <div className="flex flex-col gap-3 text-left bg-gray-50 rounded-xl p-4">
+            <div className="flex items-center gap-3">
+              <span className="material-symbols-outlined text-emerald-500 animate-pulse">check_circle</span>
+              <span className="text-sm text-text-main">Validating land parameters</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="material-symbols-outlined text-primary animate-spin">progress_activity</span>
+              <span className="text-sm text-text-main">Calculating cost estimates</span>
+            </div>
+            <div className="flex items-center gap-3 opacity-50">
+              <span className="material-symbols-outlined text-gray-400">radio_button_unchecked</span>
+              <span className="text-sm text-text-sub">Generating 3D model dimensions</span>
+            </div>
+            <div className="flex items-center gap-3 opacity-50">
+              <span className="material-symbols-outlined text-gray-400">radio_button_unchecked</span>
+              <span className="text-sm text-text-sub">Fetching weather data</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <main className="flex-grow flex flex-col items-center py-8 px-4 md:px-10 w-full max-w-[1200px] mx-auto">
-      <div className="w-full flex flex-wrap gap-2 px-4 py-2 mb-4">
+      <div className="w-full flex flex-wrap gap-2 px-4 py-1 mb-2">
         <a className="text-text-secondary hover:text-primary transition-colors text-sm font-medium leading-normal flex items-center gap-1" href="/projects">
           <span className="material-symbols-outlined text-[18px]">folder</span>
           Projects
@@ -124,10 +320,39 @@ const NewProjectForm = () => {
                     placeholder="Enter street address, city, state"
                     type="text"
                     value={address}
-                    onChange={(e) => setAddress(e.target.value)}
+                    onChange={(e) => handleAddressChange(e.target.value)}
+                    onFocus={() => setShowSuggestions(true)}
+                    onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                   />
                   <span className="material-symbols-outlined absolute left-3 top-3.5 text-gray-400">search</span>
+                  {showSuggestions && suggestions.length > 0 && (
+                    <ul className="absolute z-10 w-full bg-white border border-gray-200 rounded-lg shadow-lg top-full mt-1 max-h-60 overflow-y-auto">
+                      {suggestions.map((sugg, index) => (
+                        <li
+                          key={index}
+                          className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                          onClick={() => {
+                            setAddress(sugg.display_name);
+                            setLatitude(sugg.lat);
+                            setLongitude(sugg.lon);
+                            setShowSuggestions(false);
+                          }}
+                        >
+                          {sugg.display_name}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
+                <button
+                  type="button"
+                  className="mt-2 px-4 py-2 bg-primary-gradient text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2 disabled:opacity-50"
+                  onClick={handleGetCurrentLocation}
+                  disabled={locationLoading}
+                >
+                  <span className="material-symbols-outlined text-base">{locationLoading ? 'refresh' : 'my_location'}</span>
+                  {locationLoading ? 'Getting Location...' : 'Use Current Location'}
+                </button>
               </label>
               <div className="grid grid-cols-2 gap-4">
                 <label className="flex flex-col w-full">
@@ -158,21 +383,13 @@ const NewProjectForm = () => {
                 </p>
               </div>
             </div>
-            <div className="w-full h-64 lg:h-auto min-h-[250px] relative rounded-lg overflow-hidden border border-border-light shadow-sm group">
-              <div className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105" data-alt="Satellite map view of a city grid with streets and buildings" data-location="Los Angeles" style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuANQ9Ga1zYeXhNZBN92Iz_MH62e9OHh25qfuTvJDYuHMm6j32Zto19DADaXAj6Un67YRNI8q1Qp5CJmSkQQNLj511bASCMPRSPu6RFS__5BBQZSpMtu1peFau22d4h-GIGvOL6yuH6fumCwE_0G-vZKXdOWdRjzETmms6Q4i-X5jQGm6cf_z0n4dCgdAHE8zWnrBfiJAe9kB8dziKiL6z0Iu3I0tm6RZQKu80RFI8v8KmTuVtxOEnrjXNEBtcqt3fM9AQ_iOJyXqsze')" }}>
-              </div>
-              <div className="absolute inset-0 bg-black/10 group-hover:bg-black/5 transition-colors"></div>
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
-                <div className="size-8 bg-primary-gradient text-white rounded-full flex items-center justify-center shadow-lg shadow-blue-500/40 animate-bounce">
-                  <span className="material-symbols-outlined text-lg">location_on</span>
+            <div ref={mapRef} className="w-full h-64 lg:h-auto min-h-[250px] rounded-lg border border-border-light shadow-sm bg-gray-100 flex items-center justify-center">
+              {(!latitude || !longitude || (parseFloat(latitude) === 0 && parseFloat(longitude) === 0)) && (
+                <div className="text-center text-gray-400">
+                  <span className="material-symbols-outlined text-4xl mb-2">map</span>
+                  <p className="text-sm">Enter coordinates or use current location to see map</p>
                 </div>
-                <div className="w-3 h-1.5 bg-black/50 rounded-[100%] blur-[2px] mt-1"></div>
-              </div>
-              <div className="absolute bottom-3 right-3">
-                <button className="bg-white text-text-main text-xs font-bold px-3 py-1.5 rounded shadow-md hover:bg-gray-50 transition-colors">
-                  Expand Map
-                </button>
-              </div>
+              )}
             </div>
           </div>
         </div>
@@ -219,10 +436,12 @@ const NewProjectForm = () => {
                   onChange={(e) => setZoningType(e.target.value)}
                 >
                   <option value="" disabled>Select Zoning</option>
-                  <option value="residential">Residential (R1-R3)</option>
-                  <option value="commercial">Commercial (C1-C4)</option>
+                  <option value="residential">Residential</option>
+                  <option value="commercial">Commercial</option>
                   <option value="industrial">Industrial</option>
                   <option value="mixed">Mixed Use</option>
+                  <option value="agricultural">Agricultural</option>
+                  <option value="institutional">Institutional</option>
                 </select>
                 <span className="material-symbols-outlined absolute right-3 top-3.5 text-gray-400 pointer-events-none">expand_more</span>
               </div>
@@ -233,8 +452,8 @@ const NewProjectForm = () => {
                 <button
                   type="button"
                   className={`flex flex-col items-center justify-center gap-1 p-2 border rounded-lg transition-all ${topography === 'flat'
-                      ? 'border-primary bg-blue-50 ring-1 ring-primary/20'
-                      : 'border-gray-200 bg-white hover:border-primary hover:bg-blue-50'
+                    ? 'border-primary bg-blue-50 ring-1 ring-primary/20'
+                    : 'border-gray-200 bg-white hover:border-primary hover:bg-blue-50'
                     } group focus:ring-2 focus:ring-primary/50 focus:border-primary shadow-sm`}
                   onClick={() => setTopography('flat')}
                 >
@@ -244,8 +463,8 @@ const NewProjectForm = () => {
                 <button
                   type="button"
                   className={`flex flex-col items-center justify-center gap-1 p-2 border rounded-lg transition-all ${topography === 'sloped'
-                      ? 'border-primary bg-blue-50 ring-1 ring-primary/20'
-                      : 'border-gray-200 bg-white hover:border-primary hover:bg-blue-50'
+                    ? 'border-primary bg-blue-50 ring-1 ring-primary/20'
+                    : 'border-gray-200 bg-white hover:border-primary hover:bg-blue-50'
                     } group focus:ring-2 focus:ring-primary/50 focus:border-primary shadow-sm`}
                   onClick={() => setTopography('sloped')}
                 >
@@ -255,13 +474,112 @@ const NewProjectForm = () => {
                 <button
                   type="button"
                   className={`flex flex-col items-center justify-center gap-1 p-2 border rounded-lg transition-all ${topography === 'mixed'
-                      ? 'border-primary bg-blue-50 ring-1 ring-primary/20'
-                      : 'border-gray-200 bg-white hover:border-primary hover:bg-blue-50'
+                    ? 'border-primary bg-blue-50 ring-1 ring-primary/20'
+                    : 'border-gray-200 bg-white hover:border-primary hover:bg-blue-50'
                     } group focus:ring-2 focus:ring-primary/50 focus:border-primary shadow-sm`}
                   onClick={() => setTopography('mixed')}
                 >
                   <span className={`material-symbols-outlined ${topography === 'mixed' ? 'text-primary' : 'text-text-secondary group-hover:text-primary'}`}>terrain</span>
                   <span className={`text-xs font-medium ${topography === 'mixed' ? 'text-primary font-bold' : 'text-text-secondary group-hover:text-primary'}`}>Mixed</span>
+                </button>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        {/* Building Specifications Section */}
+        <div className="bg-surface-light border border-border-light rounded-xl p-6 shadow-sm">
+          <h2 className="text-text-main text-[22px] font-bold leading-tight tracking-[-0.015em] pb-6 flex items-center gap-2">
+            <span className="material-symbols-outlined text-transparent bg-clip-text bg-primary-gradient">home</span>
+            Building Specifications
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <label className="flex flex-col w-full">
+              <p className="text-text-main text-sm font-medium leading-normal pb-2">Number of Floors</p>
+              <input
+                className="w-full rounded-lg text-text-main focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-gray-200 bg-white placeholder:text-gray-400 px-4 py-3 text-base font-normal leading-normal transition-all shadow-sm"
+                placeholder="e.g. 2"
+                type="number"
+                min="1"
+                max="10"
+                value={floors}
+                onChange={(e) => setFloors(e.target.value)}
+              />
+            </label>
+            <label className="flex flex-col w-full">
+              <p className="text-text-main text-sm font-medium leading-normal pb-2">Construction Type</p>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  className={`flex flex-col items-center justify-center gap-1 p-3 border rounded-lg transition-all ${constructionType === 'residential'
+                    ? 'border-primary bg-blue-50 ring-1 ring-primary/20'
+                    : 'border-gray-200 bg-white hover:border-primary hover:bg-blue-50'
+                    } group focus:ring-2 focus:ring-primary/50 focus:border-primary shadow-sm`}
+                  onClick={() => setConstructionType('residential')}
+                >
+                  <span className={`material-symbols-outlined ${constructionType === 'residential' ? 'text-primary' : 'text-text-secondary group-hover:text-primary'}`}>home</span>
+                  <span className={`text-xs font-medium ${constructionType === 'residential' ? 'text-primary font-bold' : 'text-text-secondary group-hover:text-primary'}`}>Residential</span>
+                </button>
+                <button
+                  type="button"
+                  className={`flex flex-col items-center justify-center gap-1 p-3 border rounded-lg transition-all ${constructionType === 'commercial'
+                    ? 'border-primary bg-blue-50 ring-1 ring-primary/20'
+                    : 'border-gray-200 bg-white hover:border-primary hover:bg-blue-50'
+                    } group focus:ring-2 focus:ring-primary/50 focus:border-primary shadow-sm`}
+                  onClick={() => setConstructionType('commercial')}
+                >
+                  <span className={`material-symbols-outlined ${constructionType === 'commercial' ? 'text-primary' : 'text-text-secondary group-hover:text-primary'}`}>business</span>
+                  <span className={`text-xs font-medium ${constructionType === 'commercial' ? 'text-primary font-bold' : 'text-text-secondary group-hover:text-primary'}`}>Commercial</span>
+                </button>
+              </div>
+            </label>
+            <label className="flex flex-col w-full">
+              <p className="text-text-main text-sm font-medium leading-normal pb-2">Built-up Area %</p>
+              <div className="flex items-center gap-3">
+                <input
+                  type="range"
+                  min="30"
+                  max="80"
+                  value={builtUpPercent}
+                  onChange={(e) => setBuiltUpPercent(e.target.value)}
+                  className="flex-1"
+                />
+                <span className="text-text-main font-mono font-bold w-12 text-right">{builtUpPercent}%</span>
+              </div>
+              <p className="text-text-secondary text-xs mt-1">Coverage of plot area to be built</p>
+            </label>
+            <label className="flex flex-col w-full">
+              <p className="text-text-main text-sm font-medium leading-normal pb-2">Foundation Type</p>
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  className={`flex flex-col items-center justify-center gap-1 p-2 border rounded-lg transition-all ${foundationType === 'rcc'
+                    ? 'border-primary bg-blue-50 ring-1 ring-primary/20'
+                    : 'border-gray-200 bg-white hover:border-primary hover:bg-blue-50'
+                    } group focus:ring-2 focus:ring-primary/50 focus:border-primary shadow-sm`}
+                  onClick={() => setFoundationType('rcc')}
+                >
+                  <span className={`text-xs font-medium ${foundationType === 'rcc' ? 'text-primary font-bold' : 'text-text-secondary group-hover:text-primary'}`}>RCC</span>
+                </button>
+                <button
+                  type="button"
+                  className={`flex flex-col items-center justify-center gap-1 p-2 border rounded-lg transition-all ${foundationType === 'strip'
+                    ? 'border-primary bg-blue-50 ring-1 ring-primary/20'
+                    : 'border-gray-200 bg-white hover:border-primary hover:bg-blue-50'
+                    } group focus:ring-2 focus:ring-primary/50 focus:border-primary shadow-sm`}
+                  onClick={() => setFoundationType('strip')}
+                >
+                  <span className={`text-xs font-medium ${foundationType === 'strip' ? 'text-primary font-bold' : 'text-text-secondary group-hover:text-primary'}`}>Strip</span>
+                </button>
+                <button
+                  type="button"
+                  className={`flex flex-col items-center justify-center gap-1 p-2 border rounded-lg transition-all ${foundationType === 'pile'
+                    ? 'border-primary bg-blue-50 ring-1 ring-primary/20'
+                    : 'border-gray-200 bg-white hover:border-primary hover:bg-blue-50'
+                    } group focus:ring-2 focus:ring-primary/50 focus:border-primary shadow-sm`}
+                  onClick={() => setFoundationType('pile')}
+                >
+                  <span className={`text-xs font-medium ${foundationType === 'pile' ? 'text-primary font-bold' : 'text-text-secondary group-hover:text-primary'}`}>Pile</span>
                 </button>
               </div>
             </label>

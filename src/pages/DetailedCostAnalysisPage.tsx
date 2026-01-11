@@ -50,7 +50,7 @@ const DetailedCostAnalysisPage = () => {
       <Sidebar projectId={project.id} />
       <main className="flex-1 flex flex-col h-full overflow-hidden relative bg-canvas">
         <header className="flex-shrink-0 w-full bg-canvas/90 backdrop-blur-md sticky top-0 z-20 border-b border-border-sub">
-          <div className="px-6 py-6 lg:px-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div className="px-6 py-3 lg:px-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div className="flex flex-col gap-1">
               <h2 className="text-2xl lg:text-3xl font-black text-text-main tracking-tight">Cost Analysis</h2>
               <p className="text-text-sub text-sm flex items-center gap-2">
@@ -67,7 +67,7 @@ const DetailedCostAnalysisPage = () => {
           </div>
         </header>
         <div className="flex-1 overflow-y-auto">
-          <CostAnalysis />
+          <CostAnalysis project={project} />
         </div>
       </main>
     </div>
