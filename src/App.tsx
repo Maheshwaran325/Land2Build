@@ -7,7 +7,7 @@ import DetailedCostAnalysisPage from './pages/DetailedCostAnalysisPage';
 import ModelViewerPage from './pages/ModelViewerPage';
 import WeatherImpactPage from './pages/WeatherImpactPage';
 import LoginPage from './pages/LoginPage';
-import ProjectsListPage from './pages/ProjectsListPage';
+import ProjectsListPage from './pages/ProjectsListPage.tsx';
 
 function App() {
   return (
