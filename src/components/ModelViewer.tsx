@@ -1,6 +1,6 @@
 const ModelViewer = () => {
   return (
-    <main className="flex-1 flex overflow-hidden relative">
+    <main className="flex-1 flex overflow-auto relative min-h-[600px]">
       <aside className="w-72 flex-none flex flex-col border-r border-border-light bg-secondary z-10 hidden lg:flex">
         <div className="p-4 border-b border-border-light flex items-center justify-between">
           <h3 className="text-dark-slate font-bold text-sm uppercase tracking-wider">Model Layers</h3>
