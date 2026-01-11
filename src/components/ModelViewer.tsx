@@ -184,7 +184,7 @@ const ModelViewer = () => {
               <div>
                 <div className="flex justify-between text-sm mb-1">
                   <span className="text-subtext">Estimated Cost</span>
-                  <span className="text-dark-slate font-mono">$2.4M</span>
+                  <span className="text-dark-slate font-mono">₹24L</span>
                 </div>
                 <div className="flex justify-between text-sm mb-1">
                   <span className="text-subtext">Total Floor Area</span>

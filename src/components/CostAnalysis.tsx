@@ -29,9 +29,9 @@ const CostAnalysis = () => {
             <div className="flex flex-col gap-2 rounded-xl p-6 bg-card-dark border border-gray-100 hover:border-[#4364F7]/30 transition-colors shadow-sm">
               <div className="flex justify-between items-start">
                 <p className="text-text-secondary text-sm font-medium leading-normal">Total Estimated Cost</p>
-                <span className="material-symbols-outlined text-[#4364F7] text-[24px]">attach_money</span>
+                <span className="material-symbols-outlined text-[#4364F7] text-[24px]">currency_rupee</span>
               </div>
-              <p className="text-text-slate tracking-light text-2xl font-bold leading-tight">$452,000</p>
+              <p className="text-text-slate tracking-light text-2xl font-bold leading-tight">₹4,52,000</p>
               <div className="flex items-center gap-1">
                 <span className="material-symbols-outlined text-[#0bda57] text-[16px]">trending_up</span>
                 <p className="text-[#0bda57] text-sm font-medium leading-normal">+2.5% vs Plan</p>
@@ -42,7 +42,7 @@ const CostAnalysis = () => {
                 <p className="text-text-secondary text-sm font-medium leading-normal">Cost per Sq. Ft.</p>
                 <span className="material-symbols-outlined text-[#4364F7] text-[24px]">square_foot</span>
               </div>
-              <p className="text-text-slate tracking-light text-2xl font-bold leading-tight">$185</p>
+              <p className="text-text-slate tracking-light text-2xl font-bold leading-tight">₹185</p>
               <div className="flex items-center gap-1">
                 <span className="material-symbols-outlined text-[#fa5f38] text-[16px]">trending_down</span>
                 <p className="text-[#fa5f38] text-sm font-medium leading-normal">-1.2% Efficiency</p>
@@ -61,7 +61,7 @@ const CostAnalysis = () => {
                 <p className="text-text-secondary text-sm font-medium leading-normal">Contingency Budget</p>
                 <span className="material-symbols-outlined text-[#4364F7] text-[24px]">savings</span>
               </div>
-              <p className="text-text-slate tracking-light text-2xl font-bold leading-tight">$45,000</p>
+              <p className="text-text-slate tracking-light text-2xl font-bold leading-tight">₹45,000</p>
               <div className="flex items-center gap-1">
                 <span className="material-symbols-outlined text-[#0bda57] text-[16px]">shield</span>
                 <p className="text-[#0bda57] text-sm font-medium leading-normal">Healthy</p>
@@ -76,7 +76,7 @@ const CostAnalysis = () => {
               </div>
               <div>
                 <p className="text-text-slate font-bold text-sm mb-1">AI Cost Optimization Insight</p>
-                <p className="text-text-slate-light text-sm">Steel prices are trending up by 4% next month. Consider locking in rates for <span className="text-text-slate font-bold">Rebar #4</span> and <span className="text-text-slate font-bold">Structural Beams</span> now to save approximately <span className="text-[#0bda57] font-bold">$1,200</span>.</p>
+                <p className="text-text-slate-light text-sm">Steel prices are trending up by 4% next month. Consider locking in rates for <span className="text-text-slate font-bold">Rebar #4</span> and <span className="text-text-slate font-bold">Structural Beams</span> now to save approximately <span className="text-[#0bda57] font-bold">₹1,200</span>.</p>
               </div>
             </div>
             <button className="text-[#4364F7] text-sm font-bold whitespace-nowrap hover:underline shrink-0 px-4">
@@ -214,8 +214,8 @@ const CostAnalysis = () => {
                     </td>
                     <td className="p-4 text-text-secondary text-sm">Structural</td>
                     <td className="p-4 text-text-slate text-sm font-mono">450 Bags</td>
-                    <td className="p-4 text-text-slate text-sm text-right font-mono">$12.50</td>
-                    <td className="p-4 text-text-slate text-sm font-bold text-right font-mono">$5,625</td>
+                    <td className="p-4 text-text-slate text-sm text-right font-mono">₹12.50</td>
+                    <td className="p-4 text-text-slate text-sm font-bold text-right font-mono">₹5,625</td>
                     <td className="p-4 text-center">
                       <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#0bda57]/10 text-[#0bda57] border border-[#0bda57]/20">
                         Low
@@ -241,8 +241,8 @@ const CostAnalysis = () => {
                     </td>
                     <td className="p-4 text-text-secondary text-sm">Structural</td>
                     <td className="p-4 text-text-slate text-sm font-mono">1,200 Pcs</td>
-                    <td className="p-4 text-text-slate text-sm text-right font-mono">$8.40</td>
-                    <td className="p-4 text-text-slate text-sm font-bold text-right font-mono">$10,080</td>
+                    <td className="p-4 text-text-slate text-sm text-right font-mono">₹8.40</td>
+                    <td className="p-4 text-text-slate text-sm font-bold text-right font-mono">₹10,080</td>
                     <td className="p-4 text-center">
                       <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#fa5f38]/10 text-[#fa5f38] border border-[#fa5f38]/20">
                         High
@@ -268,8 +268,8 @@ const CostAnalysis = () => {
                     </td>
                     <td className="p-4 text-text-secondary text-sm">Structural</td>
                     <td className="p-4 text-text-slate text-sm font-mono">800 Units</td>
-                    <td className="p-4 text-text-slate text-sm text-right font-mono">$15.20</td>
-                    <td className="p-4 text-text-slate text-sm font-bold text-right font-mono">$12,160</td>
+                    <td className="p-4 text-text-slate text-sm text-right font-mono">₹15.20</td>
+                    <td className="p-4 text-text-slate text-sm font-bold text-right font-mono">₹12,160</td>
                     <td className="p-4 text-center">
                       <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-500/10 text-yellow-500 border border-yellow-500/20">
                         Med
@@ -295,8 +295,8 @@ const CostAnalysis = () => {
                     </td>
                     <td className="p-4 text-text-secondary text-sm">Finishing</td>
                     <td className="p-4 text-text-slate text-sm font-mono">50 Units</td>
-                    <td className="p-4 text-text-slate text-sm text-right font-mono">$240.00</td>
-                    <td className="p-4 text-text-slate text-sm font-bold text-right font-mono">$12,000</td>
+                    <td className="p-4 text-text-slate text-sm text-right font-mono">₹240.00</td>
+                    <td className="p-4 text-text-slate text-sm font-bold text-right font-mono">₹12,000</td>
                     <td className="p-4 text-center">
                       <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#0bda57]/10 text-[#0bda57] border border-[#0bda57]/20">
                         Low
@@ -322,8 +322,8 @@ const CostAnalysis = () => {
                     </td>
                     <td className="p-4 text-text-secondary text-sm">Electrical</td>
                     <td className="p-4 text-text-slate text-sm font-mono">20 Spools</td>
-                    <td className="p-4 text-text-slate text-sm text-right font-mono">$185.00</td>
-                    <td className="p-4 text-text-slate text-sm font-bold text-right font-mono">$3,700</td>
+                    <td className="p-4 text-text-slate text-sm text-right font-mono">₹185.00</td>
+                    <td className="p-4 text-text-slate text-sm font-bold text-right font-mono">₹3,700</td>
                     <td className="p-4 text-center">
                       <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-500/10 text-yellow-500 border border-yellow-500/20">
                         Med

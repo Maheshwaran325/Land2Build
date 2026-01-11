@@ -14,9 +14,10 @@ const ProjectOverview = ({ project }: ProjectOverviewProps) => {
   };
 
   const formatCurrency = (amount: number) => {
-    if (amount >= 1000000) return `$${(amount / 1000000).toFixed(1)}M`;
-    if (amount >= 1000) return `$${Math.round(amount / 1000)}k`;
-    return `$${amount}`;
+    if (amount >= 10000000) return `₹${(amount / 10000000).toFixed(1)}Cr`;
+    if (amount >= 100000) return `₹${(amount / 100000).toFixed(1)}L`;
+    if (amount >= 1000) return `₹${Math.round(amount / 1000)}k`;
+    return `₹${amount}`;
   };
 
   return (
@@ -41,7 +42,7 @@ const ProjectOverview = ({ project }: ProjectOverviewProps) => {
             <p className="text-text-sub text-sm font-medium flex items-center gap-2">
               <span className="material-symbols-outlined text-primary-solid">square_foot</span> Total Area
             </p>
-            <p className="text-2xl font-bold text-text-main">{project.totalArea.toLocaleString()} <span className="text-lg text-text-sub font-normal">Sq. Ft</span></p>
+            <p className="text-2xl font-bold text-text-main">{project.totalArea.toLocaleString('en-IN')} <span className="text-lg text-text-sub font-normal">Sq. Ft</span></p>
           </div>
           <div className="bg-secondary p-5 rounded-xl border border-border-sub flex flex-col gap-1 hover:border-blue-200 transition-colors">
             <p className="text-text-sub text-sm font-medium flex items-center gap-2">
@@ -111,7 +112,7 @@ const ProjectOverview = ({ project }: ProjectOverviewProps) => {
                   <h3 className="text-text-sub font-medium text-sm">Total Estimated Cost</h3>
                   <button className="text-primary-solid text-xs font-bold hover:underline">View Details</button>
                 </div>
-                <p className="text-4xl font-black text-text-main tracking-tight">${project.estimatedCost.toLocaleString()}</p>
+                <p className="text-4xl font-black text-text-main tracking-tight">₹{project.estimatedCost.toLocaleString('en-IN')}</p>
               </div>
               <div className="flex flex-col gap-4">
                 <div className="flex flex-col gap-1">

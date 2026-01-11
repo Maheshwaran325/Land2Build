@@ -39,7 +39,7 @@ const Features = () => {
           <div className="flex flex-col gap-4 rounded-xl border border-[#e5e7eb] bg-white p-6 hover:shadow-xl hover:shadow-[#4364F7]/5 transition-all group">
             <div className="flex items-center justify-between">
               <div className="size-12 rounded-lg bg-[#F0F4FF] flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                <span className="material-symbols-outlined text-[28px] text-[#4364F7]">attach_money</span>
+                <span className="material-symbols-outlined text-[28px] text-[#4364F7]">currency_rupee</span>
               </div>
             </div>
             <div className="flex flex-col gap-2">

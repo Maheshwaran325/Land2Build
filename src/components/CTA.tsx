@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 const CTA = () => {
   return (
     <div className="w-full flex justify-center py-20 px-4 md:px-10 lg:px-40 bg-background-light">
@@ -11,9 +13,11 @@ const CTA = () => {
             <h2 className="text-3xl md:text-4xl font-extrabold text-white leading-tight">Ready to streamline your pre-construction?</h2>
             <p className="text-gray-300 text-lg">Join forward-thinking developers and architects using Land2Build to save time and money.</p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <button className="flex min-w-[160px] cursor-pointer items-center justify-center rounded-lg h-12 px-6 bg-gradient-custom text-white text-base font-bold shadow-lg shadow-[#4364F7]/25 hover:opacity-90 transition-all">
-                Get Started Now
-              </button>
+              <Link to="/login">
+                <button className="flex min-w-[160px] cursor-pointer items-center justify-center rounded-lg h-12 px-6 bg-gradient-custom text-white text-base font-bold shadow-lg shadow-[#4364F7]/25 hover:opacity-90 transition-all">
+                  Get Started Now
+                </button>
+              </Link>
               <button className="flex min-w-[160px] cursor-pointer items-center justify-center rounded-lg h-12 px-6 bg-white/10 backdrop-blur border border-white/20 text-white text-base font-bold hover:bg-white/20 transition-all">
                 Contact Sales
               </button>

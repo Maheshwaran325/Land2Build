@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 const Hero = () => {
   return (
     <div className="relative w-full flex justify-center py-5 hero-pattern bg-background-light">
@@ -19,9 +21,11 @@ const Hero = () => {
                 </h2>
               </div>
               <div className="flex flex-wrap gap-4 mt-2">
-                <button className="flex min-w-[140px] cursor-pointer items-center justify-center rounded-lg h-12 px-6 bg-gradient-custom text-white text-base font-bold shadow-lg shadow-[#4364F7]/25 hover:opacity-90 hover:scale-105 transition-all">
-                  Start Free Trial
-                </button>
+                <Link to="/login">
+                  <button className="flex min-w-[140px] cursor-pointer items-center justify-center rounded-lg h-12 px-6 bg-gradient-custom text-white text-base font-bold shadow-lg shadow-[#4364F7]/25 hover:opacity-90 hover:scale-105 transition-all">
+                    Start Free Trial
+                  </button>
+                </Link>
                 <button className="flex min-w-[140px] cursor-pointer items-center justify-center rounded-lg h-12 px-6 bg-transparent border border-[#e5e7eb] text-text-main text-base font-bold hover:bg-bg-secondary transition-all gap-2">
                   <span className="material-symbols-outlined text-[20px]">play_circle</span>
                   Watch Demo

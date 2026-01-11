@@ -112,10 +112,10 @@ const ProjectsListPage = () => {
                                         <span className="material-symbols-outlined">apartment</span>
                                     </div>
                                     <span className={`px-3 py-1 rounded-full text-xs font-bold ${project.status === 'complete'
-                                            ? 'bg-green-50 text-green-600 border border-green-200'
-                                            : project.status === 'analyzing'
-                                                ? 'bg-yellow-50 text-yellow-600 border border-yellow-200'
-                                                : 'bg-gray-50 text-gray-600 border border-gray-200'
+                                        ? 'bg-green-50 text-green-600 border border-green-200'
+                                        : project.status === 'analyzing'
+                                            ? 'bg-yellow-50 text-yellow-600 border border-yellow-200'
+                                            : 'bg-gray-50 text-gray-600 border border-gray-200'
                                         }`}>
                                         {project.status === 'complete' ? 'Complete' : project.status === 'analyzing' ? 'Analyzing' : 'Draft'}
                                     </span>
@@ -127,11 +127,11 @@ const ProjectsListPage = () => {
                                 <div className="grid grid-cols-2 gap-3 pt-4 border-t border-border-light">
                                     <div>
                                         <p className="text-xs text-slate-gray">Total Area</p>
-                                        <p className="text-sm font-bold text-dark-slate">{project.totalArea.toLocaleString()} sq ft</p>
+                                        <p className="text-sm font-bold text-dark-slate">{project.totalArea.toLocaleString('en-IN')} sq ft</p>
                                     </div>
                                     <div>
                                         <p className="text-xs text-slate-gray">Est. Cost</p>
-                                        <p className="text-sm font-bold text-dark-slate">${project.estimatedCost.toLocaleString()}</p>
+                                        <p className="text-sm font-bold text-dark-slate">₹{project.estimatedCost.toLocaleString('en-IN')}</p>
                                     </div>
                                 </div>
                             </Link>

@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 const Header = () => {
   return (
     <div className="sticky top-0 z-50 border-b border-[#e5e7eb] bg-background-light/95 backdrop-blur-md">
@@ -16,9 +18,11 @@ const Header = () => {
                 <a className="text-sm font-medium leading-normal hover:text-primary transition-colors text-text-main" href="#">How it Works</a>
                 <a className="text-sm font-medium leading-normal hover:text-primary transition-colors text-text-main" href="#">Pricing</a>
               </div>
-              <button className="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-gradient-custom text-white text-sm font-bold leading-normal tracking-[0.015em] hover:opacity-90 transition-opacity">
-                <span className="truncate">Get Started</span>
-              </button>
+              <Link to="/login">
+                <button className="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-gradient-custom text-white text-sm font-bold leading-normal tracking-[0.015em] hover:opacity-90 transition-opacity">
+                  <span className="truncate">Get Started</span>
+                </button>
+              </Link>
             </div>
           </header>
         </div>

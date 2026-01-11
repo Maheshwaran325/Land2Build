@@ -86,8 +86,8 @@ const LoginPage = () => {
             <div className="flex border-b border-border-light gap-8">
               <button
                 className={`relative pb-3 text-sm font-bold tracking-wide transition-colors duration-200 ${activeTab === 'login'
-                    ? 'text-primary border-b-2 border-primary'
-                    : 'text-slate-gray border-b-2 border-transparent hover:text-dark-slate'
+                  ? 'text-primary border-b-2 border-primary'
+                  : 'text-slate-gray border-b-2 border-transparent hover:text-dark-slate'
                   }`}
                 type="button"
                 onClick={() => { setActiveTab('login'); setError(''); }}
@@ -96,8 +96,8 @@ const LoginPage = () => {
               </button>
               <button
                 className={`relative pb-3 text-sm font-bold tracking-wide transition-colors duration-200 ${activeTab === 'signup'
-                    ? 'text-primary border-b-2 border-primary'
-                    : 'text-slate-gray border-b-2 border-transparent hover:text-dark-slate'
+                  ? 'text-primary border-b-2 border-primary'
+                  : 'text-slate-gray border-b-2 border-transparent hover:text-dark-slate'
                   }`}
                 type="button"
                 onClick={() => { setActiveTab('signup'); setError(''); }}
@@ -181,7 +181,7 @@ const LoginPage = () => {
               <span className="w-full border-t border-border-light"></span>
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-canvas px-2 text-slate-gray">Or continue with</span>
+              <span className="bg-white px-4 text-slate-gray border border-border-light rounded">Or continue with</span>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
