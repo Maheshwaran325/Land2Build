@@ -1,4 +1,58 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+
 const LoginPage = () => {
+  const navigate = useNavigate();
+  const { login, signup, user } = useAuth();
+
+  const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  // Redirect if already logged in
+  if (user) {
+    navigate('/projects');
+    return null;
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      if (activeTab === 'login') {
+        const result = await login(email, password);
+        if (result.success) {
+          navigate('/projects');
+        } else {
+          setError(result.error || 'Login failed');
+        }
+      } else {
+        if (!name.trim()) {
+          setError('Please enter your name');
+          setLoading(false);
+          return;
+        }
+        const result = await signup(email, password, name);
+        if (result.success) {
+          navigate('/projects');
+        } else {
+          setError(result.error || 'Signup failed');
+        }
+      }
+    } catch {
+      setError('An unexpected error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="relative flex h-screen w-full flex-row">
       <div className="flex flex-col w-full lg:w-[45%] xl:w-[40%] h-full overflow-y-auto z-10 bg-canvas relative border-r border-border-light">
@@ -19,38 +73,107 @@ const LoginPage = () => {
         </div>
         <div className="flex-1 flex flex-col justify-center px-6 sm:px-12 lg:px-16 xl:px-24 pb-10">
           <div className="mb-8">
-            <h1 className="text-3xl sm:text-4xl font-black leading-tight tracking-tight mb-2 text-dark-slate">Welcome Back</h1>
-            <p className="text-slate-gray text-base font-normal">Turn raw land into intelligent plans.</p>
+            <h1 className="text-3xl sm:text-4xl font-black leading-tight tracking-tight mb-2 text-dark-slate">
+              {activeTab === 'login' ? 'Welcome Back' : 'Create Account'}
+            </h1>
+            <p className="text-slate-gray text-base font-normal">
+              {activeTab === 'login'
+                ? 'Turn raw land into intelligent plans.'
+                : 'Start your construction analysis journey.'}
+            </p>
           </div>
           <div className="mb-8">
             <div className="flex border-b border-border-light gap-8">
-              <button className="relative pb-3 text-sm font-bold tracking-wide text-primary border-b-2 border-primary transition-colors duration-200" type="button">
+              <button
+                className={`relative pb-3 text-sm font-bold tracking-wide transition-colors duration-200 ${activeTab === 'login'
+                    ? 'text-primary border-b-2 border-primary'
+                    : 'text-slate-gray border-b-2 border-transparent hover:text-dark-slate'
+                  }`}
+                type="button"
+                onClick={() => { setActiveTab('login'); setError(''); }}
+              >
                 Log In
               </button>
-              <button className="relative pb-3 text-sm font-bold tracking-wide text-slate-gray border-b-2 border-transparent hover:text-dark-slate transition-colors duration-200" type="button">
+              <button
+                className={`relative pb-3 text-sm font-bold tracking-wide transition-colors duration-200 ${activeTab === 'signup'
+                    ? 'text-primary border-b-2 border-primary'
+                    : 'text-slate-gray border-b-2 border-transparent hover:text-dark-slate'
+                  }`}
+                type="button"
+                onClick={() => { setActiveTab('signup'); setError(''); }}
+              >
                 Sign Up
               </button>
             </div>
           </div>
-          <form className="flex flex-col gap-5">
+
+          {error && (
+            <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-sm">
+              {error}
+            </div>
+          )}
+
+          <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
+            {activeTab === 'signup' && (
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium text-dark-slate" htmlFor="name">Full Name</label>
+                <input
+                  className="flex w-full h-12 rounded-lg border border-border-light bg-surface px-4 py-2 text-base text-dark-slate placeholder:text-slate-400 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all"
+                  id="name"
+                  placeholder="John Doe"
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+              </div>
+            )}
             <div className="flex flex-col gap-2">
               <label className="text-sm font-medium text-dark-slate" htmlFor="email">Email Address</label>
-              <input className="flex w-full h-12 rounded-lg border border-border-light bg-surface px-4 py-2 text-base text-dark-slate placeholder:text-slate-400 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all" id="email" placeholder="name@company.com" type="email" />
+              <input
+                className="flex w-full h-12 rounded-lg border border-border-light bg-surface px-4 py-2 text-base text-dark-slate placeholder:text-slate-400 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all"
+                id="email"
+                placeholder="name@company.com"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
             </div>
             <div className="flex flex-col gap-2">
               <div className="flex justify-between items-center">
                 <label className="text-sm font-medium text-dark-slate" htmlFor="password">Password</label>
-                <a className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors" href="#">Forgot Password?</a>
+                {activeTab === 'login' && (
+                  <a className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors" href="#">Forgot Password?</a>
+                )}
               </div>
               <div className="relative">
-                <input className="flex w-full h-12 rounded-lg border border-border-light bg-surface px-4 py-2 pr-10 text-base text-dark-slate placeholder:text-slate-400 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all" id="password" placeholder="••••••••" type="password" />
-                <button className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-dark-slate transition-colors" type="button">
-                  <span className="material-symbols-outlined text-[20px]">visibility_off</span>
+                <input
+                  className="flex w-full h-12 rounded-lg border border-border-light bg-surface px-4 py-2 pr-10 text-base text-dark-slate placeholder:text-slate-400 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all"
+                  id="password"
+                  placeholder="••••••••"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={6}
+                />
+                <button
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-dark-slate transition-colors"
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  <span className="material-symbols-outlined text-[20px]">
+                    {showPassword ? 'visibility' : 'visibility_off'}
+                  </span>
                 </button>
               </div>
             </div>
-            <button className="mt-4 flex w-full items-center justify-center rounded-lg bg-primary-gradient py-3.5 text-base font-bold text-white shadow-lg shadow-blue-500/20 hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-all" type="button">
-              Log In
+            <button
+              className="mt-4 flex w-full items-center justify-center rounded-lg bg-primary-gradient py-3.5 text-base font-bold text-white shadow-lg shadow-blue-500/20 hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              type="submit"
+              disabled={loading}
+            >
+              {loading ? 'Please wait...' : (activeTab === 'login' ? 'Log In' : 'Create Account')}
             </button>
           </form>
           <div className="relative my-8">
@@ -79,9 +202,9 @@ const LoginPage = () => {
           <div className="mt-8 text-center">
             <p className="text-sm text-slate-gray">
               By continuing, you agree to our
-              <a className="font-medium text-dark-slate underline decoration-slate-300 underline-offset-4 hover:text-primary transition-colors" href="#">Terms of Service</a>
-              and
-              <a className="font-medium text-dark-slate underline decoration-slate-300 underline-offset-4 hover:text-primary transition-colors" href="#">Privacy Policy</a>.
+              <a className="font-medium text-dark-slate underline decoration-slate-300 underline-offset-4 hover:text-primary transition-colors" href="#"> Terms of Service</a>
+              {' '}and
+              <a className="font-medium text-dark-slate underline decoration-slate-300 underline-offset-4 hover:text-primary transition-colors" href="#"> Privacy Policy</a>.
             </p>
           </div>
         </div>

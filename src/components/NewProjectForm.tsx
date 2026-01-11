@@ -1,8 +1,80 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { useProjects } from '../hooks/useProjects';
+
 const NewProjectForm = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { createProject } = useProjects();
+
+  // Form state
+  const [title, setTitle] = useState('');
+  const [address, setAddress] = useState('');
+  const [latitude, setLatitude] = useState('');
+  const [longitude, setLongitude] = useState('');
+  const [plotSize, setPlotSize] = useState('');
+  const [plotUnit, setPlotUnit] = useState<'acres' | 'sqft'>('acres');
+  const [zoningType, setZoningType] = useState('');
+  const [topography, setTopography] = useState<'flat' | 'sloped' | 'mixed'>('sloped');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  // Redirect if not logged in
+  if (!user) {
+    navigate('/login');
+    return null;
+  }
+
+  const handleSubmit = async () => {
+    setError('');
+
+    if (!title.trim()) {
+      setError('Please enter a project title');
+      return;
+    }
+    if (!address.trim()) {
+      setError('Please enter an address');
+      return;
+    }
+    if (!plotSize || parseFloat(plotSize) <= 0) {
+      setError('Please enter a valid plot size');
+      return;
+    }
+    if (!zoningType) {
+      setError('Please select a zoning type');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const projectId = await createProject({
+        title: title.trim(),
+        address: address.trim(),
+        latitude: latitude || '0',
+        longitude: longitude || '0',
+        plotSize: parseFloat(plotSize),
+        plotUnit,
+        zoningType,
+        topography
+      });
+
+      if (projectId) {
+        navigate(`/project/${projectId}`);
+      } else {
+        setError('Failed to create project. Please try again.');
+      }
+    } catch {
+      setError('An unexpected error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <main className="flex-grow flex flex-col items-center py-8 px-4 md:px-10 w-full max-w-[1200px] mx-auto">
       <div className="w-full flex flex-wrap gap-2 px-4 py-2 mb-4">
-        <a className="text-text-secondary hover:text-primary transition-colors text-sm font-medium leading-normal flex items-center gap-1" href="#">
+        <a className="text-text-secondary hover:text-primary transition-colors text-sm font-medium leading-normal flex items-center gap-1" href="/projects">
           <span className="material-symbols-outlined text-[18px]">folder</span>
           Projects
         </a>
@@ -17,11 +89,24 @@ const NewProjectForm = () => {
           </p>
         </div>
       </div>
+
+      {error && (
+        <div className="w-full mb-4 p-4 rounded-lg bg-red-50 border border-red-200 text-red-600">
+          {error}
+        </div>
+      )}
+
       <div className="w-full flex flex-col gap-6">
         <div className="bg-surface-light border border-border-light rounded-xl p-6 shadow-sm">
           <label className="flex flex-col w-full">
             <p className="text-text-main text-base font-bold leading-normal pb-3">Project Title</p>
-            <input className="w-full rounded-lg text-text-main focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-gray-200 bg-white placeholder:text-gray-400 p-4 text-base font-normal leading-normal transition-all shadow-sm" placeholder="e.g. Riverside Commercial Complex" type="text" />
+            <input
+              className="w-full rounded-lg text-text-main focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-gray-200 bg-white placeholder:text-gray-400 p-4 text-base font-normal leading-normal transition-all shadow-sm"
+              placeholder="e.g. Riverside Commercial Complex"
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+            />
           </label>
         </div>
         <div className="bg-surface-light border border-border-light rounded-xl p-6 shadow-sm">
@@ -34,18 +119,36 @@ const NewProjectForm = () => {
               <label className="flex flex-col w-full">
                 <p className="text-text-main text-sm font-medium leading-normal pb-2">Full Address</p>
                 <div className="relative">
-                  <input className="w-full rounded-lg text-text-main focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-gray-200 bg-white placeholder:text-gray-400 pl-11 pr-4 py-3 text-base font-normal leading-normal transition-all shadow-sm" placeholder="Enter street address, city, state" type="text" />
+                  <input
+                    className="w-full rounded-lg text-text-main focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-gray-200 bg-white placeholder:text-gray-400 pl-11 pr-4 py-3 text-base font-normal leading-normal transition-all shadow-sm"
+                    placeholder="Enter street address, city, state"
+                    type="text"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                  />
                   <span className="material-symbols-outlined absolute left-3 top-3.5 text-gray-400">search</span>
                 </div>
               </label>
               <div className="grid grid-cols-2 gap-4">
                 <label className="flex flex-col w-full">
                   <p className="text-text-main text-sm font-medium leading-normal pb-2">Latitude</p>
-                  <input className="w-full rounded-lg text-text-main focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-gray-200 bg-white placeholder:text-gray-400 px-4 py-3 text-base font-normal leading-normal transition-all shadow-sm" placeholder="34.0522" type="text" />
+                  <input
+                    className="w-full rounded-lg text-text-main focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-gray-200 bg-white placeholder:text-gray-400 px-4 py-3 text-base font-normal leading-normal transition-all shadow-sm"
+                    placeholder="34.0522"
+                    type="text"
+                    value={latitude}
+                    onChange={(e) => setLatitude(e.target.value)}
+                  />
                 </label>
                 <label className="flex flex-col w-full">
                   <p className="text-text-main text-sm font-medium leading-normal pb-2">Longitude</p>
-                  <input className="w-full rounded-lg text-text-main focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-gray-200 bg-white placeholder:text-gray-400 px-4 py-3 text-base font-normal leading-normal transition-all shadow-sm" placeholder="-118.2437" type="text" />
+                  <input
+                    className="w-full rounded-lg text-text-main focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-gray-200 bg-white placeholder:text-gray-400 px-4 py-3 text-base font-normal leading-normal transition-all shadow-sm"
+                    placeholder="-118.2437"
+                    type="text"
+                    value={longitude}
+                    onChange={(e) => setLongitude(e.target.value)}
+                  />
                 </label>
               </div>
               <div className="p-4 bg-blue-50 rounded-lg border border-blue-100 flex gap-3 items-start">
@@ -83,17 +186,39 @@ const NewProjectForm = () => {
               <div className="flex justify-between items-center pb-2">
                 <p className="text-text-main text-sm font-medium leading-normal">Plot Size</p>
                 <div className="flex bg-white rounded p-0.5 border border-gray-200">
-                  <button className="px-2 py-0.5 text-[10px] font-bold bg-primary-gradient text-white rounded shadow-sm">ACRES</button>
-                  <button className="px-2 py-0.5 text-[10px] font-bold text-text-secondary hover:text-primary transition-colors">SQ FT</button>
+                  <button
+                    type="button"
+                    className={`px-2 py-0.5 text-[10px] font-bold rounded shadow-sm transition-all ${plotUnit === 'acres' ? 'bg-primary-gradient text-white' : 'text-text-secondary hover:text-primary'}`}
+                    onClick={() => setPlotUnit('acres')}
+                  >
+                    ACRES
+                  </button>
+                  <button
+                    type="button"
+                    className={`px-2 py-0.5 text-[10px] font-bold transition-colors ${plotUnit === 'sqft' ? 'bg-primary-gradient text-white rounded shadow-sm' : 'text-text-secondary hover:text-primary'}`}
+                    onClick={() => setPlotUnit('sqft')}
+                  >
+                    SQ FT
+                  </button>
                 </div>
               </div>
-              <input className="w-full rounded-lg text-text-main focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-gray-200 bg-white placeholder:text-gray-400 px-4 py-3 text-base font-normal leading-normal transition-all shadow-sm" placeholder="0.00" type="number" />
+              <input
+                className="w-full rounded-lg text-text-main focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-gray-200 bg-white placeholder:text-gray-400 px-4 py-3 text-base font-normal leading-normal transition-all shadow-sm"
+                placeholder="0.00"
+                type="number"
+                value={plotSize}
+                onChange={(e) => setPlotSize(e.target.value)}
+              />
             </label>
             <label className="flex flex-col w-full">
               <p className="text-text-main text-sm font-medium leading-normal pb-2">Zoning Type</p>
               <div className="relative">
-                <select className="w-full appearance-none rounded-lg text-text-main focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-gray-200 bg-white px-4 py-3 text-base font-normal leading-normal transition-all cursor-pointer shadow-sm">
-                  <option disabled="" selected="" value="">Select Zoning</option>
+                <select
+                  className="w-full appearance-none rounded-lg text-text-main focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-gray-200 bg-white px-4 py-3 text-base font-normal leading-normal transition-all cursor-pointer shadow-sm"
+                  value={zoningType}
+                  onChange={(e) => setZoningType(e.target.value)}
+                >
+                  <option value="" disabled>Select Zoning</option>
                   <option value="residential">Residential (R1-R3)</option>
                   <option value="commercial">Commercial (C1-C4)</option>
                   <option value="industrial">Industrial</option>
@@ -105,17 +230,38 @@ const NewProjectForm = () => {
             <label className="flex flex-col w-full">
               <p className="text-text-main text-sm font-medium leading-normal pb-2">Topography Estimate</p>
               <div className="grid grid-cols-3 gap-2">
-                <button className="flex flex-col items-center justify-center gap-1 p-2 border border-gray-200 bg-white rounded-lg hover:border-primary hover:bg-blue-50 transition-all group focus:ring-2 focus:ring-primary/50 focus:border-primary shadow-sm">
-                  <span className="material-symbols-outlined text-text-secondary group-hover:text-primary">horizontal_rule</span>
-                  <span className="text-xs text-text-secondary group-hover:text-primary font-medium">Flat</span>
+                <button
+                  type="button"
+                  className={`flex flex-col items-center justify-center gap-1 p-2 border rounded-lg transition-all ${topography === 'flat'
+                      ? 'border-primary bg-blue-50 ring-1 ring-primary/20'
+                      : 'border-gray-200 bg-white hover:border-primary hover:bg-blue-50'
+                    } group focus:ring-2 focus:ring-primary/50 focus:border-primary shadow-sm`}
+                  onClick={() => setTopography('flat')}
+                >
+                  <span className={`material-symbols-outlined ${topography === 'flat' ? 'text-primary' : 'text-text-secondary group-hover:text-primary'}`}>horizontal_rule</span>
+                  <span className={`text-xs font-medium ${topography === 'flat' ? 'text-primary font-bold' : 'text-text-secondary group-hover:text-primary'}`}>Flat</span>
                 </button>
-                <button className="flex flex-col items-center justify-center gap-1 p-2 border border-primary bg-blue-50 rounded-lg shadow-sm transition-all ring-1 ring-primary/20">
-                  <span className="material-symbols-outlined text-primary">ssid_chart</span>
-                  <span className="text-xs text-primary font-bold">Sloped</span>
+                <button
+                  type="button"
+                  className={`flex flex-col items-center justify-center gap-1 p-2 border rounded-lg transition-all ${topography === 'sloped'
+                      ? 'border-primary bg-blue-50 ring-1 ring-primary/20'
+                      : 'border-gray-200 bg-white hover:border-primary hover:bg-blue-50'
+                    } group focus:ring-2 focus:ring-primary/50 focus:border-primary shadow-sm`}
+                  onClick={() => setTopography('sloped')}
+                >
+                  <span className={`material-symbols-outlined ${topography === 'sloped' ? 'text-primary' : 'text-text-secondary group-hover:text-primary'}`}>ssid_chart</span>
+                  <span className={`text-xs font-medium ${topography === 'sloped' ? 'text-primary font-bold' : 'text-text-secondary group-hover:text-primary'}`}>Sloped</span>
                 </button>
-                <button className="flex flex-col items-center justify-center gap-1 p-2 border border-gray-200 bg-white rounded-lg hover:border-primary hover:bg-blue-50 transition-all group focus:ring-2 focus:ring-primary/50 focus:border-primary shadow-sm">
-                  <span className="material-symbols-outlined text-text-secondary group-hover:text-primary">terrain</span>
-                  <span className="text-xs text-text-secondary group-hover:text-primary font-medium">Mixed</span>
+                <button
+                  type="button"
+                  className={`flex flex-col items-center justify-center gap-1 p-2 border rounded-lg transition-all ${topography === 'mixed'
+                      ? 'border-primary bg-blue-50 ring-1 ring-primary/20'
+                      : 'border-gray-200 bg-white hover:border-primary hover:bg-blue-50'
+                    } group focus:ring-2 focus:ring-primary/50 focus:border-primary shadow-sm`}
+                  onClick={() => setTopography('mixed')}
+                >
+                  <span className={`material-symbols-outlined ${topography === 'mixed' ? 'text-primary' : 'text-text-secondary group-hover:text-primary'}`}>terrain</span>
+                  <span className={`text-xs font-medium ${topography === 'mixed' ? 'text-primary font-bold' : 'text-text-secondary group-hover:text-primary'}`}>Mixed</span>
                 </button>
               </div>
             </label>
@@ -134,25 +280,12 @@ const NewProjectForm = () => {
             <p className="text-text-secondary text-sm">Survey PDFs, Soil Reports, or CAD files (DWG, DXF)</p>
             <p className="text-text-secondary text-xs mt-4 bg-gray-100 px-2 py-1 rounded">Max file size: 50MB</p>
           </div>
-          <div className="mt-4 flex flex-col gap-3">
-            <div className="flex items-center justify-between p-3 rounded-lg bg-white border border-gray-200 shadow-sm">
-              <div className="flex items-center gap-3">
-                <div className="size-10 rounded bg-red-50 border border-red-100 flex items-center justify-center text-red-500">
-                  <span className="material-symbols-outlined">picture_as_pdf</span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-sm font-bold text-text-main">Site_Survey_2023.pdf</span>
-                  <span className="text-xs text-text-secondary">2.4 MB • Uploaded just now</span>
-                </div>
-              </div>
-              <button className="p-2 hover:bg-gray-100 rounded-full text-text-secondary hover:text-red-500 transition-colors">
-                <span className="material-symbols-outlined">delete</span>
-              </button>
-            </div>
-          </div>
         </div>
         <div className="flex flex-col-reverse md:flex-row justify-between items-center gap-4 py-6 border-t border-border-light mt-4">
-          <button className="w-full md:w-auto px-8 py-3 rounded-lg text-text-secondary hover:text-text-main font-bold text-sm transition-colors">
+          <button
+            className="w-full md:w-auto px-8 py-3 rounded-lg text-text-secondary hover:text-text-main font-bold text-sm transition-colors"
+            onClick={() => navigate('/projects')}
+          >
             Cancel and Return
           </button>
           <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
@@ -160,9 +293,13 @@ const NewProjectForm = () => {
               <span className="material-symbols-outlined text-lg">save</span>
               Save Draft
             </button>
-            <button className="w-full md:w-auto px-8 py-3 rounded-lg bg-primary-gradient hover:opacity-90 text-white font-bold text-sm shadow-[0_4px_14px_rgba(0,82,212,0.3)] transition-all flex items-center justify-center gap-2 transform hover:-translate-y-0.5">
+            <button
+              className="w-full md:w-auto px-8 py-3 rounded-lg bg-primary-gradient hover:opacity-90 text-white font-bold text-sm shadow-[0_4px_14px_rgba(0,82,212,0.3)] transition-all flex items-center justify-center gap-2 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              onClick={handleSubmit}
+              disabled={loading}
+            >
               <span className="material-symbols-outlined">auto_awesome</span>
-              Analyze & Create Project
+              {loading ? 'Creating...' : 'Analyze & Create Project'}
             </button>
           </div>
         </div>
