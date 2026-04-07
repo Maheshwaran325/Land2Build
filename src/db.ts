@@ -34,6 +34,7 @@ export interface Project {
     // India-specific land inputs
     city: string;
     constructionType: 'residential' | 'commercial';
+    houseType: string;
     builtUpPercent: number;
     foundationType: 'rcc' | 'strip' | 'pile';
     // AI-generated data

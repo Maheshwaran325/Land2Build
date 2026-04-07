@@ -1,12 +1,12 @@
-import { useMemo } from 'react';
 import * as THREE from 'three';
+import { Edges } from '@react-three/drei';
 import { type Room, type HouseType } from './FloorPlan';
 
 interface WallBuilderProps {
     rooms: Room[];
     floorHeight: number;
     wallHeight: number;
-    viewMode: 'rendered' | 'wireframe';
+    viewMode: 'rendered' | 'wireframe' | 'blueprint';
     wallColor?: string;
     designStyle?: string;
     houseType?: HouseType;
@@ -21,7 +21,7 @@ interface SmartWallProps {
     isExterior?: boolean;
     hasWindow?: boolean;
     hasDoor?: boolean;
-    viewMode: 'rendered' | 'wireframe';
+    viewMode: 'rendered' | 'wireframe' | 'blueprint';
     wallColor?: string;
     designStyle?: string;
 }
@@ -48,17 +48,32 @@ function getDoorColor(designStyle: string): { main: string; panel: string } {
 
 function SmartWall({ position, rotation = [0, 0, 0], width, height, thickness, isExterior, hasWindow, hasDoor, viewMode, wallColor = "#f5f5f5", designStyle = "modern" }: SmartWallProps) {
     const isWireframe = viewMode === 'wireframe';
+    const isBlueprint = viewMode === 'blueprint';
+    
     const exteriorColor = isExterior ? wallColor : "#fafafa";
-    const material = <meshStandardMaterial color={exteriorColor} roughness={0.85} wireframe={isWireframe} />;
+    
+    const material = isBlueprint ? (
+        <meshStandardMaterial color="#001833" transparent opacity={0.65} depthWrite={false} />
+    ) : (
+        <meshStandardMaterial color={exteriorColor} roughness={0.85} wireframe={isWireframe} />
+    );
+    
+    // Helper to render glowing blueprint edges
+    const renderEdges = () => {
+        if (!isBlueprint) return null;
+        return <Edges scale={1.001} color="#00ffff" />;
+    };
+
     const doorColors = getDoorColor(designStyle);
     const shutterColor = getShutterColor(designStyle);
 
     // Simple solid wall
     if (!hasWindow && !hasDoor) {
         return (
-            <mesh position={position} rotation={rotation} castShadow receiveShadow>
+            <mesh position={position} rotation={rotation} castShadow={!isBlueprint} receiveShadow={!isBlueprint}>
                 <boxGeometry args={[width, height, thickness]} />
                 {material}
+                {renderEdges()}
             </mesh>
         );
     }
@@ -73,23 +88,26 @@ function SmartWall({ position, rotation = [0, 0, 0], width, height, thickness, i
         return (
             <group position={position} rotation={rotation}>
                 {/* Left Side */}
-                <mesh position={[-width / 2 + sideWidth / 2, 0, 0]} castShadow receiveShadow>
+                <mesh position={[-width / 2 + sideWidth / 2, 0, 0]} castShadow={!isBlueprint} receiveShadow={!isBlueprint}>
                     <boxGeometry args={[sideWidth, height, thickness]} />
                     {material}
+                    {renderEdges()}
                 </mesh>
                 {/* Right Side */}
-                <mesh position={[width / 2 - sideWidth / 2, 0, 0]} castShadow receiveShadow>
+                <mesh position={[width / 2 - sideWidth / 2, 0, 0]} castShadow={!isBlueprint} receiveShadow={!isBlueprint}>
                     <boxGeometry args={[sideWidth, height, thickness]} />
                     {material}
+                    {renderEdges()}
                 </mesh>
                 {/* Top Header */}
-                <mesh position={[0, height / 2 - topHeight / 2, 0]} castShadow receiveShadow>
+                <mesh position={[0, height / 2 - topHeight / 2, 0]} castShadow={!isBlueprint} receiveShadow={!isBlueprint}>
                     <boxGeometry args={[doorWidth, topHeight, thickness]} />
                     {material}
+                    {renderEdges()}
                 </mesh>
 
                 {/* Door Frame */}
-                {!isWireframe && (
+                {!isWireframe && !isBlueprint && (
                     <group position={[0, -height / 2 + doorHeight / 2, 0]}>
                         {/* Frame Left */}
                         <mesh position={[-doorWidth / 2 - 0.03, 0, 0]} castShadow>
@@ -110,7 +128,13 @@ function SmartWall({ position, rotation = [0, 0, 0], width, height, thickness, i
                 )}
 
                 {/* The Door Itself - Enhanced with style-based colors */}
-                {!isWireframe && (
+                {isBlueprint ? (
+                     <mesh position={[0, -height / 2 + doorHeight / 2, 0]}>
+                         <boxGeometry args={[doorWidth, doorHeight, thickness/2]} />
+                         <meshStandardMaterial color="#001833" transparent opacity={0.3} />
+                         <Edges color="#00ccff" />
+                     </mesh>
+                ) : !isWireframe && (
                     <group position={[0, -height / 2 + doorHeight / 2, 0]}>
                         {/* Door Panel */}
                         <mesh castShadow>
@@ -156,79 +180,94 @@ function SmartWall({ position, rotation = [0, 0, 0], width, height, thickness, i
         return (
             <group position={position} rotation={rotation}>
                 {/* Bottom (Sill) */}
-                <mesh position={[0, -height / 2 + sillHeight / 2, 0]} castShadow receiveShadow>
+                <mesh position={[0, -height / 2 + sillHeight / 2, 0]} castShadow={!isBlueprint} receiveShadow={!isBlueprint}>
                     <boxGeometry args={[width, sillHeight, thickness]} />
                     {material}
+                    {renderEdges()}
                 </mesh>
                 {/* Top (Header) */}
-                <mesh position={[0, height / 2 - headerHeight / 2, 0]} castShadow receiveShadow>
+                <mesh position={[0, height / 2 - headerHeight / 2, 0]} castShadow={!isBlueprint} receiveShadow={!isBlueprint}>
                     <boxGeometry args={[width, headerHeight, thickness]} />
                     {material}
+                    {renderEdges()}
                 </mesh>
                 {/* Left Side (between sill and header) */}
-                <mesh position={[-width / 2 + sideWidth / 2, -height / 2 + sillHeight + winHeight / 2, 0]} castShadow receiveShadow>
+                <mesh position={[-width / 2 + sideWidth / 2, -height / 2 + sillHeight + winHeight / 2, 0]} castShadow={!isBlueprint} receiveShadow={!isBlueprint}>
                     <boxGeometry args={[sideWidth, winHeight, thickness]} />
                     {material}
+                    {renderEdges()}
                 </mesh>
                 {/* Right Side */}
-                <mesh position={[width / 2 - sideWidth / 2, -height / 2 + sillHeight + winHeight / 2, 0]} castShadow receiveShadow>
+                <mesh position={[width / 2 - sideWidth / 2, -height / 2 + sillHeight + winHeight / 2, 0]} castShadow={!isBlueprint} receiveShadow={!isBlueprint}>
                     <boxGeometry args={[sideWidth, winHeight, thickness]} />
                     {material}
+                    {renderEdges()}
                 </mesh>
 
-                {/* Window Sill Ledge */}
-                {!isWireframe && (
-                    <mesh position={[0, -height / 2 + sillHeight + 0.02, thickness / 2 + 0.04]} castShadow>
-                        <boxGeometry args={[winWidth + 0.2, 0.05, 0.1]} />
-                        <meshStandardMaterial color="#e0e0e0" roughness={0.6} />
-                    </mesh>
-                )}
-
-                {/* Window Frame */}
-                {!isWireframe && (
+                {/* Glass Window with Grid */}
+                {isBlueprint ? (
+                    <mesh position={[0, -height / 2 + sillHeight + winHeight / 2, 0]}>
+                         <boxGeometry args={[winWidth, winHeight, 0.05]} />
+                         <meshStandardMaterial color="#001833" transparent opacity={0.1} />
+                         <Edges color="#0088cc" />
+                     </mesh>
+                ) : !isWireframe && (
                     <group position={[0, -height / 2 + sillHeight + winHeight / 2, 0]}>
+                        {/* Window Sill Ledge */}
+                        <mesh position={[0, -winHeight / 2 - 0.05, thickness / 2 + 0.04]} castShadow>
+                            <boxGeometry args={[winWidth + 0.2, 0.05, 0.1]} />
+                            <meshStandardMaterial color="#e0e0e0" roughness={0.6} />
+                        </mesh>
                         {/* Outer Frame */}
                         <mesh position={[0, 0, thickness / 4]}>
                             <boxGeometry args={[winWidth + 0.1, winHeight + 0.1, 0.04]} />
                             <meshStandardMaterial color="#ffffff" roughness={0.5} />
                         </mesh>
-                    </group>
-                )}
-
-                {/* Glass Window with Grid */}
-                {!isWireframe && (
-                    <group position={[0, -height / 2 + sillHeight + winHeight / 2, 0]}>
-                        {/* Glass */}
+                        {/* Glass - Physical material for realistic look */}
                         <mesh>
                             <boxGeometry args={[winWidth - 0.05, winHeight - 0.05, thickness / 6]} />
-                            <meshStandardMaterial
-                                color="#a8d4e6"
+                            <meshPhysicalMaterial
+                                color="#88c8e8"
                                 transparent
-                                opacity={0.5}
-                                roughness={0.05}
+                                opacity={0.35}
+                                roughness={0.02}
                                 metalness={0.1}
+                                transmission={0.6}
+                                thickness={0.05}
+                                envMapIntensity={1.5}
+                            />
+                        </mesh>
+                        {/* Interior glow (warm light behind glass) */}
+                        <mesh position={[0, 0, -thickness / 4]}>
+                            <boxGeometry args={[winWidth - 0.15, winHeight - 0.15, 0.01]} />
+                            <meshStandardMaterial
+                                color="#fff3e0"
+                                emissive="#ffcc80"
+                                emissiveIntensity={0.15}
+                                transparent
+                                opacity={0.3}
                             />
                         </mesh>
                         {/* Window Muntins (Grid) - Horizontal */}
                         <mesh position={[0, 0, thickness / 4]}>
-                            <boxGeometry args={[winWidth, 0.04, 0.02]} />
-                            <meshStandardMaterial color="#f5f5f5" roughness={0.5} />
+                            <boxGeometry args={[winWidth, 0.035, 0.02]} />
+                            <meshStandardMaterial color="#f5f5f5" roughness={0.4} />
                         </mesh>
                         {/* Window Muntins - Vertical */}
                         <mesh position={[0, 0, thickness / 4]}>
-                            <boxGeometry args={[0.04, winHeight, 0.02]} />
-                            <meshStandardMaterial color="#f5f5f5" roughness={0.5} />
+                            <boxGeometry args={[0.035, winHeight, 0.02]} />
+                            <meshStandardMaterial color="#f5f5f5" roughness={0.4} />
                         </mesh>
                         {/* Frame outline */}
                         <lineSegments>
                             <edgesGeometry args={[new THREE.BoxGeometry(winWidth, winHeight, 0.05)]} />
-                            <lineBasicMaterial color="#555" />
+                            <lineBasicMaterial color="#666" />
                         </lineSegments>
                     </group>
                 )}
 
                 {/* Shutters - Style-based color */}
-                {!isWireframe && isExterior && (
+                {!isWireframe && !isBlueprint && isExterior && (designStyle === 'traditional' || designStyle === 'colonial') && (
                     <>
                         <mesh position={[-winWidth / 2 - 0.18, -height / 2 + sillHeight + winHeight / 2, thickness / 2 + 0.02]} castShadow>
                             <boxGeometry args={[0.3, winHeight + 0.1, 0.04]} />
@@ -561,38 +600,50 @@ function DiningTable({ position, isWireframe }: { position: [number, number, num
     );
 }
 
-export function WallBuilder({ rooms, floorHeight, wallHeight, viewMode, wallColor = '#f5f5f5', designStyle = 'modern', houseType = 'standard' }: WallBuilderProps) {
+export function WallBuilder({ rooms, floorHeight, wallHeight, viewMode, wallColor = '#f5f5f5', designStyle = 'modern', houseType: _houseType = 'standard' }: WallBuilderProps) {
     const isWireframe = viewMode === 'wireframe';
-    const WALL_THICKNESS = 0.15;
+    const isBlueprint = viewMode === 'blueprint';
+    const WALL_THICKNESS = 0.2;
+    const INT_WALL_THICKNESS = 0.1;
 
     return (
-        <group>
+        <group position={[0, floorHeight, 0]}>
             {rooms.map((room) => {
-                const hasWindowH = (room.type === 'bedroom' || room.type === 'living' || room.type === 'kitchen') && room.width > 2;
-                const hasWindowV = (room.type === 'bedroom' || room.type === 'living' || room.type === 'dining') && room.length > 2;
-                // Use the hasFrontDoor flag from floor plan, fallback to Living room detection
-                const hasFrontDoor = room.hasFrontDoor === true;
+                const topThick = room.isExterior.top ? WALL_THICKNESS : INT_WALL_THICKNESS;
+                const botThick = room.isExterior.bottom ? WALL_THICKNESS : INT_WALL_THICKNESS;
+                const leftThick = room.isExterior.left ? WALL_THICKNESS : INT_WALL_THICKNESS;
+                const rightThick = room.isExterior.right ? WALL_THICKNESS : INT_WALL_THICKNESS;
 
                 return (
-                    <group key={room.id} position={[room.x, floorHeight + wallHeight / 2, room.y]}>
-
+                    <group key={`room-${room.id}`} position={[room.x, wallHeight / 2, room.y]}>
                         {/* Floor Slab with Texture Pattern */}
-                        <mesh position={[0, -wallHeight / 2 + 0.05, 0]} receiveShadow>
+                        <mesh position={[0, -wallHeight / 2 + 0.05, 0]} receiveShadow={!isBlueprint}>
                             <boxGeometry args={[room.width, 0.1, room.length]} />
-                            <meshStandardMaterial
-                                color={
-                                    room.type === 'bathroom' ? '#b8d4d8' :
-                                        room.type === 'kitchen' ? '#e8e0d0' :
-                                            room.type === 'bedroom' ? '#e8dcc8' :
-                                                '#f0e6d3'
-                                }
-                                roughness={0.75}
-                                wireframe={isWireframe}
-                            />
+                            {isBlueprint ? (
+                                <meshStandardMaterial color="#001020" />
+                            ) : (
+                                <meshStandardMaterial
+                                    color={
+                                        room.type === 'bathroom' ? '#b8d4d8' :
+                                            room.type === 'kitchen' ? '#e8e0d0' :
+                                                room.type === 'bedroom' ? '#c9b99a' :
+                                                    room.type === 'living' ? '#d4c4a8' :
+                                                        '#f0e6d3'
+                                    }
+                                    roughness={
+                                        room.type === 'bathroom' ? 0.3 :
+                                            room.type === 'kitchen' ? 0.4 :
+                                                room.type === 'bedroom' ? 0.85 :
+                                                    0.7
+                                    }
+                                    wireframe={isWireframe}
+                                />
+                            )}
+                            {isBlueprint && <Edges color="#004466" />}
                         </mesh>
 
                         {/* Floor Pattern Overlay */}
-                        {!isWireframe && room.type === 'kitchen' && (
+                        {!isWireframe && !isBlueprint && room.type === 'kitchen' && (
                             <group position={[0, -wallHeight / 2 + 0.11, 0]}>
                                 {Array.from({ length: Math.floor(room.width / 0.6) }).map((_, i) =>
                                     Array.from({ length: Math.floor(room.length / 0.6) }).map((_, j) => (
@@ -611,70 +662,83 @@ export function WallBuilder({ rooms, floorHeight, wallHeight, viewMode, wallColo
                             <meshStandardMaterial color="#fafafa" roughness={1} wireframe={isWireframe} />
                         </mesh>
 
-                        {/* Ceiling Light */}
-                        {!isWireframe && (
+                        {/* Ceiling Light - with glow effect - hide in blueprint */}
+                        {!isWireframe && !isBlueprint && (
                             <group position={[0, wallHeight / 2 - 0.15, 0]}>
+                                {/* Light fixture */}
                                 <mesh>
                                     <cylinderGeometry args={[0.2, 0.25, 0.05, 16]} />
-                                    <meshStandardMaterial color="#e0e0e0" roughness={0.5} />
+                                    <meshStandardMaterial color="#e0e0e0" roughness={0.5} metalness={0.3} />
                                 </mesh>
-                                <pointLight intensity={0.3} color="#fff5e6" distance={5} decay={2} />
+                                {/* Bulb glow */}
+                                <mesh position={[0, -0.04, 0]}>
+                                    <sphereGeometry args={[0.08, 12, 12]} />
+                                    <meshStandardMaterial
+                                        color="#fff8e1"
+                                        emissive="#ffcc00"
+                                        emissiveIntensity={0.4}
+                                        transparent
+                                        opacity={0.9}
+                                    />
+                                </mesh>
+                                <pointLight intensity={0.4} color="#fff5e6" distance={6} decay={2} />
                             </group>
                         )}
 
-                        {/* Walls using SmartWall - Pass wallColor and designStyle */}
-
-                        {/* Back Wall (North) */}
+                        {/* Back Wall (North/Top, -Z) */}
                         <SmartWall
-                            position={[0, 0, -room.length / 2 - WALL_THICKNESS / 2]}
-                            width={room.width + WALL_THICKNESS * 2}
+                            position={[0, 0, -room.length / 2]}
+                            width={room.width}
                             height={wallHeight}
-                            thickness={WALL_THICKNESS}
-                            isExterior={true}
-                            hasWindow={hasWindowH && !hasFrontDoor}
-                            viewMode={viewMode}
+                            thickness={topThick}
+                            isExterior={room.isExterior.top}
+                            hasWindow={room.isExterior.top && room.type !== 'bathroom'}
+                            rotation={[0, 0, 0]}
+                            viewMode={viewMode || 'rendered'}
                             wallColor={wallColor}
                             designStyle={designStyle}
                         />
 
-                        {/* Front Wall (South) - This is where the front door is */}
+                        {/* Front Wall (South/Bottom, +Z) */}
                         <SmartWall
-                            position={[0, 0, room.length / 2 + WALL_THICKNESS / 2]}
-                            width={room.width + WALL_THICKNESS * 2}
+                            position={[0, 0, room.length / 2]}
+                            width={room.width}
                             height={wallHeight}
-                            thickness={WALL_THICKNESS}
-                            isExterior={true}
-                            hasDoor={hasFrontDoor && floorHeight === 0}
-                            hasWindow={hasWindowH && !hasFrontDoor && !(hasFrontDoor && floorHeight === 0)}
-                            viewMode={viewMode}
+                            thickness={botThick}
+                            isExterior={room.isExterior.bottom}
+                            hasWindow={room.isExterior.bottom && room.type !== 'bathroom'}
+                            hasDoor={room.hasFrontDoor || (!room.isExterior.bottom && room.type !== 'bathroom')}
+                            rotation={[0, 0, 0]}
+                            viewMode={viewMode || 'rendered'}
                             wallColor={wallColor}
                             designStyle={designStyle}
                         />
 
-                        {/* Left Wall (West) */}
+                        {/* Left Wall (West, -X) */}
                         <SmartWall
-                            position={[-room.width / 2 - WALL_THICKNESS / 2, 0, 0]}
+                            position={[-room.width / 2, 0, 0]}
+                            width={room.length + (topThick + botThick)/2}
+                            height={wallHeight}
+                            thickness={leftThick}
+                            isExterior={room.isExterior.left}
+                            hasWindow={room.isExterior.left && room.type !== 'bathroom'}
                             rotation={[0, Math.PI / 2, 0]}
-                            width={room.length}
-                            height={wallHeight}
-                            thickness={WALL_THICKNESS}
-                            isExterior={true}
-                            hasWindow={hasWindowV}
-                            viewMode={viewMode}
+                            viewMode={viewMode || 'rendered'}
                             wallColor={wallColor}
                             designStyle={designStyle}
                         />
 
-                        {/* Right Wall (East) */}
+                        {/* Right Wall (East, +X) */}
                         <SmartWall
-                            position={[room.width / 2 + WALL_THICKNESS / 2, 0, 0]}
-                            rotation={[0, Math.PI / 2, 0]}
-                            width={room.length}
+                            position={[room.width / 2, 0, 0]}
+                            width={room.length + (topThick + botThick)/2}
                             height={wallHeight}
-                            thickness={WALL_THICKNESS}
-                            isExterior={true}
-                            hasWindow={hasWindowV}
-                            viewMode={viewMode}
+                            thickness={rightThick}
+                            isExterior={room.isExterior.right}
+                            hasWindow={room.isExterior.right && room.type === 'bathroom'}
+                            hasDoor={!room.isExterior.right && room.type === 'bathroom'}
+                            rotation={[0, Math.PI / 2, 0]}
+                            viewMode={viewMode || 'rendered'}
                             wallColor={wallColor}
                             designStyle={designStyle}
                         />

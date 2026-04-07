@@ -20,6 +20,7 @@ export function useProjects() {
         constructionType: 'residential' | 'commercial';
         builtUpPercent: number;
         foundationType: 'rcc' | 'strip' | 'pile';
+        houseType: string;
     }): Promise<number | null> => {
         if (!user?.id) return null;
 

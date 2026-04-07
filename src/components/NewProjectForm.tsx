@@ -2,6 +2,8 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useProjects } from '../hooks/useProjects';
+import type { HouseType } from './3d/procedural/FloorPlan';
+import { getHouseTypeDescription } from '../services/aiService';
 import type L from 'leaflet';
 
 const reverseGeocode = async (lat: number, lng: number): Promise<string> => {
@@ -47,6 +49,7 @@ const NewProjectForm = () => {
   const [constructionType, setConstructionType] = useState<'residential' | 'commercial'>('residential');
   const [builtUpPercent, setBuiltUpPercent] = useState('60');
   const [foundationType, setFoundationType] = useState<'rcc' | 'strip' | 'pile'>('rcc');
+  const [houseType, setHouseType] = useState<HouseType>('standard');
 
   // UI state
   const [loading, setLoading] = useState(false);
@@ -100,7 +103,8 @@ const NewProjectForm = () => {
         floors: parseInt(floors) || 2,
         constructionType,
         builtUpPercent: parseInt(builtUpPercent) || 60,
-        foundationType
+        foundationType,
+        houseType
       });
 
       if (projectId) {
@@ -582,6 +586,26 @@ const NewProjectForm = () => {
                   <span className={`text-xs font-medium ${foundationType === 'pile' ? 'text-primary font-bold' : 'text-text-secondary group-hover:text-primary'}`}>Pile</span>
                 </button>
               </div>
+            </label>
+            <label className="flex flex-col w-full">
+              <p className="text-text-main text-sm font-medium leading-normal pb-2">House Type</p>
+              <div className="relative">
+                <select
+                  className="w-full appearance-none rounded-lg text-text-main focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-gray-200 bg-white px-4 py-3 text-base font-normal leading-normal transition-all cursor-pointer shadow-sm"
+                  value={houseType}
+                  onChange={(e) => setHouseType(e.target.value as HouseType)}
+                >
+                  <option value="standard">Standard</option>
+                  <option value="villa">Villa (Luxury)</option>
+                  <option value="duplex">Duplex (2 Units)</option>
+                  <option value="lshaped">L-Shaped</option>
+                  <option value="courtyard">Courtyard</option>
+                  <option value="apartment">Apartment</option>
+                  <option value="bungalow">Bungalow (1 Floor)</option>
+                </select>
+                <span className="material-symbols-outlined absolute right-3 top-3.5 text-gray-400 pointer-events-none">expand_more</span>
+              </div>
+              <p className="text-xs text-text-secondary mt-1">{getHouseTypeDescription(houseType)}</p>
             </label>
           </div>
         </div>

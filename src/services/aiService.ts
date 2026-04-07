@@ -16,7 +16,6 @@ export interface BuildingConfig {
     roofType: 'flat' | 'gable' | 'hip';
     wallMaterial: 'brick' | 'concrete' | 'aac_block';
     designStyle?: 'modern' | 'traditional' | 'colonial' | 'minimalist';
-    houseType?: HouseType;
 }
 
 export interface LandInputs {
@@ -70,8 +69,7 @@ Return JSON:
   "floors": <number>,
   "roofType": "flat" | "gable" | "hip",
   "wallMaterial": "brick" | "concrete" | "aac_block",
-  "designStyle": "modern" | "traditional" | "colonial" | "minimalist",
-  "houseType": "standard" | "villa" | "duplex" | "lshaped" | "courtyard" | "apartment" | "bungalow"
+  "designStyle": "modern" | "traditional" | "colonial" | "minimalist"
 }
 
 Respond ONLY with valid JSON, no explanation.`;
