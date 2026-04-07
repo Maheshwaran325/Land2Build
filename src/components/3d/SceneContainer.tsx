@@ -2,6 +2,7 @@ import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Environment, ContactShadows, Sky } from '@react-three/drei';
 import { Suspense } from 'react';
 import HouseModel from './HouseModel';
+import type { HouseType } from './procedural/FloorPlan';
 
 interface SceneContainerProps {
     width?: number;
@@ -11,6 +12,8 @@ interface SceneContainerProps {
     wallColor?: string;
     roofColor?: string;
     viewMode?: 'rendered' | 'wireframe';
+    designStyle?: string;
+    houseType?: HouseType;
 }
 
 function LoadingFallback() {
@@ -29,7 +32,9 @@ export function SceneContainer({
     roofType = 'gable',
     wallColor = '#f5f0e6',
     roofColor = '#8b4513',
-    viewMode = 'rendered'
+    viewMode = 'rendered',
+    designStyle = 'modern',
+    houseType = 'standard'
 }: SceneContainerProps) {
     return (
         <div className="w-full h-full min-h-[400px] bg-gradient-to-b from-sky-200 to-sky-400 rounded-lg overflow-hidden">
@@ -64,6 +69,8 @@ export function SceneContainer({
                         wallColor={wallColor}
                         roofColor={roofColor}
                         viewMode={viewMode}
+                        designStyle={designStyle}
+                        houseType={houseType}
                     />
 
                     {/* Shadows */}

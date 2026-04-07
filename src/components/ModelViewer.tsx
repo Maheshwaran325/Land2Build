@@ -1,8 +1,9 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import SceneContainer from './3d/SceneContainer';
-import { generateBuildingConfig, predictCostAndMaterials, isAIConfigured, type BuildingConfig, type LandInputs } from '../services/aiService';
+import { generateBuildingConfig, predictCostAndMaterials, isAIConfigured, getHouseTypeDescription, AI_PROMPT_EXAMPLES, type BuildingConfig, type LandInputs } from '../services/aiService';
 import { db, type Project } from '../db';
+import type { HouseType } from './3d/procedural/FloorPlan';
 
 interface ModelViewerProps {
   project?: Project;
@@ -50,7 +51,9 @@ const ModelViewer = ({ project }: ModelViewerProps) => {
     length: initialDims.length,
     floors: initialDims.floors,
     roofType: 'gable',
-    wallMaterial: 'brick'
+    wallMaterial: 'brick',
+    designStyle: 'modern',
+    houseType: 'standard'
   });
 
   // Effect to reset config if project changes drastically or initially loads
@@ -61,7 +64,9 @@ const ModelViewer = ({ project }: ModelViewerProps) => {
       length: initialDims.length,
       floors: initialDims.floors,
       roofType: 'gable',
-      wallMaterial: 'brick'
+      wallMaterial: 'brick',
+      designStyle: 'modern',
+      houseType: 'standard'
     });
   }, [initialDims]);
 
@@ -174,7 +179,24 @@ const ModelViewer = ({ project }: ModelViewerProps) => {
       <aside className="w-72 flex-none flex flex-col border-r border-border-light bg-secondary z-10 hidden lg:flex">
         <div className="p-4 border-b border-border-light flex items-center justify-between">
           <h3 className="text-dark-slate font-bold text-sm uppercase tracking-wider">Building Config</h3>
-          <span className="material-symbols-outlined text-primary text-[20px]">tune</span>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setConfig({
+                width: initialDims.width,
+                length: initialDims.length,
+                floors: initialDims.floors,
+                roofType: 'gable',
+                wallMaterial: 'brick',
+                designStyle: 'modern',
+                houseType: 'standard'
+              })}
+              className="p-1 text-subtext hover:text-primary hover:bg-primary/5 rounded transition"
+              title="Reset Config"
+            >
+              <span className="material-symbols-outlined text-[18px]">restart_alt</span>
+            </button>
+            <span className="material-symbols-outlined text-primary text-[20px]">tune</span>
+          </div>
         </div>
 
         {/* AI Prompt Section */}
@@ -288,6 +310,42 @@ const ModelViewer = ({ project }: ModelViewerProps) => {
               <option value="aac_block">AAC Block</option>
             </select>
           </div>
+
+          <div>
+            <label className="block text-xs font-bold text-subtext uppercase tracking-wider mb-2">
+              House Type
+            </label>
+            <select
+              value={config.houseType || 'standard'}
+              onChange={(e) => setConfig({ ...config, houseType: e.target.value as HouseType })}
+              className="w-full p-2 border border-border-light rounded-lg text-sm"
+            >
+              <option value="standard">Standard</option>
+              <option value="villa">Villa (Luxury)</option>
+              <option value="duplex">Duplex (2 Units)</option>
+              <option value="lshaped">L-Shaped</option>
+              <option value="courtyard">Courtyard</option>
+              <option value="apartment">Apartment</option>
+              <option value="bungalow">Bungalow (1 Floor)</option>
+            </select>
+            <p className="text-xs text-subtext mt-1">{getHouseTypeDescription(config.houseType || 'standard')}</p>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-subtext uppercase tracking-wider mb-2">
+              Design Style
+            </label>
+            <select
+              value={config.designStyle || 'modern'}
+              onChange={(e) => setConfig({ ...config, designStyle: e.target.value as any })}
+              className="w-full p-2 border border-border-light rounded-lg text-sm"
+            >
+              <option value="modern">Modern (Open Plan)</option>
+              <option value="traditional">Traditional (Closed)</option>
+              <option value="colonial">Colonial</option>
+              <option value="minimalist">Minimalist</option>
+            </select>
+          </div>
         </div>
 
         {/* Quick Actions */}
@@ -331,36 +389,34 @@ const ModelViewer = ({ project }: ModelViewerProps) => {
           roofType={config.roofType}
           wallColor={config.wallMaterial === 'brick' ? '#c45c3e' : config.wallMaterial === 'concrete' ? '#a0a0a0' : '#e8e4d9'}
           viewMode={viewMode}
+          designStyle={config.designStyle}
+          houseType={config.houseType}
         />
 
         {/* View Mode Toolbar */}
-        <div className="absolute top-4 right-4 flex flex-col gap-2 items-end">
-          <div className="flex bg-white/90 backdrop-blur-md rounded-lg p-1 border border-border-light shadow-lg">
-            <button
-              onClick={() => setViewMode('rendered')}
-              className={`p-2 rounded ${viewMode === 'rendered' ? 'text-primary bg-primary/10' : 'text-subtext hover:text-dark-slate hover:bg-gray-100'}`}
-              title="Rendered View"
-            >
-              <span className="material-symbols-outlined">view_in_ar</span>
-            </button>
-            <button
-              onClick={() => setViewMode('wireframe')}
-              className={`p-2 rounded ${viewMode === 'wireframe' ? 'text-primary bg-primary/10' : 'text-subtext hover:text-dark-slate hover:bg-gray-100'}`}
-              title="Wireframe"
-            >
-              <span className="material-symbols-outlined">grid_4x4</span>
-            </button>
-            <div className="w-px bg-border-light mx-1 my-1"></div>
-            <button
-              onClick={toggleFullscreen}
-              className="p-2 text-subtext hover:text-dark-slate hover:bg-gray-100 rounded"
-              title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
-            >
-              <span className="material-symbols-outlined">
-                {isFullscreen ? 'close_fullscreen' : 'fullscreen'}
-              </span>
-            </button>
-          </div>
+        <div className="absolute top-4 right-4 bg-white/90 backdrop-blur shadow-lg rounded-lg p-1 flex gap-2">
+          <button
+            onClick={() => setViewMode('rendered')}
+            className={`p-2 rounded ${viewMode === 'rendered' ? 'text-dark-slate bg-gray-100' : 'text-subtext hover:text-dark-slate hover:bg-gray-50'}`}
+            title="Rendered View"
+          >
+            <span className="material-symbols-outlined">view_in_ar</span>
+          </button>
+          <button
+            onClick={() => setViewMode('wireframe')}
+            className={`p-2 rounded ${viewMode === 'wireframe' ? 'text-dark-slate bg-gray-100' : 'text-subtext hover:text-dark-slate hover:bg-gray-50'}`}
+            title="Wireframe"
+          >
+            <span className="material-symbols-outlined">grid_4x4</span>
+          </button>
+          <div className="w-px bg-gray-200 my-1"></div>
+          <button
+            onClick={toggleFullscreen}
+            className="p-2 text-subtext hover:text-dark-slate hover:bg-gray-100 rounded"
+            title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+          >
+            <span className="material-symbols-outlined">{isFullscreen ? 'close_fullscreen' : 'fullscreen'}</span>
+          </button>
         </div>
 
         {/* Info Panel */}
