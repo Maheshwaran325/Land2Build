@@ -187,37 +187,33 @@ const ProjectOverview = ({ project }: ProjectOverviewProps) => {
         </div>
 
         {/* Construction Phases */}
-        <div className="bg-secondary rounded-xl border border-border-sub p-6 shadow-sm mb-6">
+        <div className="bg-surface rounded-xl border border-border-sub p-6 shadow-xl shadow-black/20 mb-6">
           <div className="flex flex-wrap justify-between items-center mb-6 gap-4">
-            <h3 className="text-text-main font-bold text-lg">Construction Phases</h3>
+            <h3 className="text-text-main font-bold text-lg font-display">Construction Phases</h3>
             <div className="flex gap-2 text-sm">
-              <span className="px-3 py-1 rounded-full bg-green-50 text-green-600 border border-green-200 font-bold">On Track</span>
-              <span className="px-3 py-1 rounded-full bg-white text-text-sub border border-border-sub">Phase 1: Foundation</span>
+              <span className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold tracking-wide">On Track</span>
+              <span className="px-3 py-1 rounded-full bg-canvas text-text-sub border border-border-light">Active: Foundation</span>
             </div>
           </div>
           <div className="relative pt-6 pb-2">
-            <div className="absolute top-[36px] left-0 right-0 h-1 bg-gray-200 rounded-full"></div>
+            <div className="absolute top-[36px] left-0 right-0 h-1.5 bg-border-light rounded-full overflow-hidden">
+               <div className="h-full bg-primary-solid w-[15%] rounded-full shadow-[0_0_10px_rgba(59,130,246,0.8)]"></div>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 relative">
-              <div className="flex flex-col gap-2 relative group">
-                <div className="w-5 h-5 rounded-full bg-primary-solid border-4 border-white relative z-10 mb-2 shadow-[0_0_0_4px_rgba(0,82,212,0.2)]"></div>
-                <p className="text-text-main font-bold text-sm">Foundation</p>
-                <p className="text-text-sub text-xs">Month 1 - {Math.ceil(project.estimatedTimeline * 0.15)}</p>
-              </div>
-              <div className="flex flex-col gap-2 relative group opacity-50">
-                <div className="w-5 h-5 rounded-full bg-gray-300 border-4 border-white relative z-10 mb-2 ring-1 ring-gray-200"></div>
-                <p className="text-text-main font-bold text-sm">Structure</p>
-                <p className="text-text-sub text-xs">Month {Math.ceil(project.estimatedTimeline * 0.15) + 1} - {Math.ceil(project.estimatedTimeline * 0.45)}</p>
-              </div>
-              <div className="flex flex-col gap-2 relative group opacity-50">
-                <div className="w-5 h-5 rounded-full bg-gray-300 border-4 border-white relative z-10 mb-2 ring-1 ring-gray-200"></div>
-                <p className="text-text-main font-bold text-sm">Enclosure</p>
-                <p className="text-text-sub text-xs">Month {Math.ceil(project.estimatedTimeline * 0.45) + 1} - {Math.ceil(project.estimatedTimeline * 0.7)}</p>
-              </div>
-              <div className="flex flex-col gap-2 relative group opacity-50">
-                <div className="w-5 h-5 rounded-full bg-gray-300 border-4 border-white relative z-10 mb-2 ring-1 ring-gray-200"></div>
-                <p className="text-text-main font-bold text-sm">Finishing</p>
-                <p className="text-text-sub text-xs">Month {Math.ceil(project.estimatedTimeline * 0.7) + 1} - {project.estimatedTimeline}</p>
-              </div>
+              {[
+                { name: 'Foundation', start: 1, end: Math.ceil(project.estimatedTimeline * 0.15), status: 'active' },
+                { name: 'Structure', start: Math.ceil(project.estimatedTimeline * 0.15) + 1, end: Math.ceil(project.estimatedTimeline * 0.45), status: 'pending' },
+                { name: 'Enclosure', start: Math.ceil(project.estimatedTimeline * 0.45) + 1, end: Math.ceil(project.estimatedTimeline * 0.7), status: 'pending' },
+                { name: 'Finishing', start: Math.ceil(project.estimatedTimeline * 0.7) + 1, end: project.estimatedTimeline, status: 'pending' },
+              ].map((phase, idx) => (
+                <div key={idx} className={`flex flex-col gap-2 relative group ${phase.status === 'pending' ? 'opacity-40 grayscale' : ''}`}>
+                  <div className={`w-5 h-5 rounded-full border-4 border-canvas relative z-10 mb-2 ${phase.status === 'active' ? 'bg-primary-solid shadow-[0_0_0_4px_rgba(59,130,246,0.3)]' : 'bg-surface ring-2 ring-border-light'}`}></div>
+                  <p className="text-text-main font-bold text-sm tracking-wide">{phase.name}</p>
+                  <p className="text-text-sub text-xs bg-canvas/60 inline-block px-2 py-1 rounded border border-border-light w-fit">
+                    M{phase.start} - M{phase.end}
+                  </p>
+                </div>
+              ))}
             </div>
           </div>
         </div>

@@ -53,12 +53,12 @@ const Sidebar = ({ projectId }: SidebarProps) => {
       {/* Header */}
       <div className={`p-4 ${isCollapsed ? 'px-2' : 'p-6'}`}>
         <div className="flex items-center justify-between">
-          <div className={`flex items-center gap-2 ${isCollapsed ? 'justify-center w-full' : ''}`}>
-            <span className="material-symbols-outlined text-primary-solid text-3xl">architecture</span>
+          <div className={`flex items-center gap-3 ${isCollapsed ? 'justify-center w-full' : ''}`}>
+            <img src="/logo.png" alt="Land2Build Logo" className="h-8 w-auto rounded object-contain" />
             {!isCollapsed && (
               <div className="flex flex-col">
-                <h1 className="text-text-main text-xl font-bold leading-normal">Land2Build</h1>
-                <p className="text-text-sub text-xs font-medium">AI Construction Planner</p>
+                <h1 className="text-text-main text-xl font-bold leading-normal font-display">Land2Build</h1>
+                <p className="text-text-sub text-[10px] font-bold tracking-widest uppercase">AI Dashboard</p>
               </div>
             )}
           </div>

@@ -60,9 +60,9 @@ function getCameraPreset(preset: CameraPresetType, width: number, length: number
             };
         case 'walkthrough':
             return {
-                position: [0, 1.7, length / 2 + 5],
-                target: [0, 1.7, 0],
-                fov: 65
+                position: [0, 1.5, length / 2 - 2.5],
+                target: [0, 1.5, 0],
+                fov: 75
             };
         case 'perspective':
         default:
@@ -337,7 +337,7 @@ export function SceneContainer({
     viewMode = 'rendered',
     designStyle = 'modern',
     houseType = 'standard',
-    cameraPreset = 'perspective',
+    cameraPreset = 'walkthrough',
     showLabels = false,
     showDimensions = false,
     showSection = false,

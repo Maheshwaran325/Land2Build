@@ -57,19 +57,10 @@ const LoginPage = () => {
     <div className="relative flex h-screen w-full flex-row">
       <div className="flex flex-col w-full lg:w-[45%] xl:w-[40%] h-full overflow-y-auto z-10 bg-canvas relative border-r border-border-light">
         <div className="p-6 lg:p-10 flex items-center gap-3">
-          <div className="size-8 text-primary">
-            <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <linearGradient id="logo-gradient" x1="0" x2="1" y1="0" y2="1">
-                  <stop offset="0%" stopColor="#0052D4"></stop>
-                  <stop offset="50%" stopColor="#4364F7"></stop>
-                  <stop offset="100%" stopColor="#6FB1FC"></stop>
-                </linearGradient>
-              </defs>
-              <path d="M42.4379 44C42.4379 44 36.0744 33.9038 41.1692 24C46.8624 12.9336 42.2078 4 42.2078 4L7.01134 4C7.01134 4 11.6577 12.932 5.96912 23.9969C0.876273 33.9029 7.27094 44 7.27094 44L42.4379 44Z" fill="url(#logo-gradient)"></path>
-            </svg>
+          <div className="flex items-center gap-2">
+            <img src="/logo.png" alt="Land2Build Logo" className="h-10 w-auto rounded-md object-contain" />
+            <h2 className="text-2xl font-black tracking-tight text-dark-slate font-display">Land2Build</h2>
           </div>
-          <h2 className="text-xl font-bold tracking-tight text-dark-slate">Land2Build</h2>
         </div>
         <div className="flex-1 flex flex-col justify-center px-6 sm:px-12 lg:px-16 xl:px-24 pb-10">
           <div className="mb-8">
@@ -185,17 +176,12 @@ const LoginPage = () => {
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <button className="flex items-center justify-center gap-2 rounded-lg border border-border-light bg-white py-2.5 text-sm font-semibold text-dark-slate hover:bg-surface transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1" type="button">
-              <svg aria-hidden="true" className="h-5 w-5" viewBox="0 0 24 24">
-                <path d="M12.0003 20.45c4.6667 0 8.45-3.7833 8.45-8.45 0-4.6667-3.7833-8.45-8.45-8.45-4.6667 0-8.45 3.7833-8.45 8.45 0 4.6667 3.7833 8.45 8.45 8.45Z" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"></path>
-                <path d="M12 20.45V12h8.45" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"></path>
-              </svg>
+            <button className="flex items-center justify-center gap-2 rounded-lg border border-border-light bg-surface py-2.5 text-sm font-semibold text-dark-slate hover:bg-border-light transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1" type="button">
+              <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="h-5 w-5" />
               Google
             </button>
-            <button className="flex items-center justify-center gap-2 rounded-lg border border-border-light bg-white py-2.5 text-sm font-semibold text-dark-slate hover:bg-surface transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1" type="button">
-              <svg aria-hidden="true" className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M11.4 24H0V12.6h11.4V24zM24 24H12.6V12.6H24V24zM11.4 11.4H0V0h11.4v11.4zM24 11.4H12.6V0H24v11.4z"></path>
-              </svg>
+            <button className="flex items-center justify-center gap-2 rounded-lg border border-border-light bg-surface py-2.5 text-sm font-semibold text-dark-slate hover:bg-border-light transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1" type="button">
+              <img src="https://www.svgrepo.com/show/452285/microsoft.svg" alt="Microsoft" className="h-5 w-5" />
               Microsoft
             </button>
           </div>
